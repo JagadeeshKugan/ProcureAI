@@ -223,12 +223,14 @@ function CreateRequestDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus data-icon="inline-start" />
-          Create New Request
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button>
+            <Plus data-icon="inline-start" />
+            Create New Request
+          </Button>
+        }
+      />
       <DialogContent className="sm:max-w-lg">
         <form onSubmit={handleSubmit}>
           <DialogHeader>

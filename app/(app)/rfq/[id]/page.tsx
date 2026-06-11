@@ -57,11 +57,15 @@ export default function QuoteComparisonPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <Button variant="ghost" size="sm" className="w-fit" asChild>
-        <Link href="/rfq">
-          <ArrowLeft data-icon="inline-start" />
-          Back to RFQs
-        </Link>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-fit"
+        render={<Link href="/rfq" />}
+        nativeButton={false}
+      >
+        <ArrowLeft data-icon="inline-start" />
+        Back to RFQs
       </Button>
 
       <PageHeader title={rfq.title} description={`${rfq.number} · ${rfq.vendorsResponded} quotes received`} />

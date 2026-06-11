@@ -116,11 +116,14 @@ export default function RfqPage() {
                     {formatCurrency(rfq.estimatedValue, true)}
                   </TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/rfq/${rfq.id}`}>
-                        <Sparkles data-icon="inline-start" />
-                        Compare
-                      </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      render={<Link href={`/rfq/${rfq.id}`} />}
+                      nativeButton={false}
+                    >
+                      <Sparkles data-icon="inline-start" />
+                      Compare
                     </Button>
                   </TableCell>
                 </TableRow>

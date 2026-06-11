@@ -95,9 +95,8 @@ export default function VendorsPage() {
             </SelectContent>
           </Select>
           <ToggleGroup
-            type="single"
-            value={sort}
-            onValueChange={(v) => v && setSort(v)}
+            value={[sort]}
+            onValueChange={(v) => v[0] && setSort(v[0])}
             variant="outline"
           >
             <ToggleGroupItem value="ai">AI Score</ToggleGroupItem>

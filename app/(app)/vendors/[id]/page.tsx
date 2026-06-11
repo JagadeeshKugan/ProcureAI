@@ -59,11 +59,15 @@ export default function VendorProfilePage({
 
   return (
     <div className="flex flex-col gap-6">
-      <Button variant="ghost" size="sm" className="w-fit" asChild>
-        <Link href="/vendors">
-          <ArrowLeft data-icon="inline-start" />
-          Back to Vendors
-        </Link>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-fit"
+        render={<Link href="/vendors" />}
+        nativeButton={false}
+      >
+        <ArrowLeft data-icon="inline-start" />
+        Back to Vendors
       </Button>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
