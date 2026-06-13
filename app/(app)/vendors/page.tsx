@@ -80,7 +80,7 @@ export default function VendorsPage() {
           />
         </InputGroup>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Select value={category} onValueChange={setCategory}>
+          <Select value={category} onValueChange={(value) => setCategory(value ?? "all")}>
             <SelectTrigger className="sm:w-48">
               <SelectValue placeholder="Category" />
             </SelectTrigger>

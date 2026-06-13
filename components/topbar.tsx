@@ -88,8 +88,8 @@ export function Topbar() {
       <Breadcrumb className="hidden md:block">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/dashboard">ProcureAI</Link>
+            <BreadcrumbLink render={<Link href="/dashboard" />}>
+              ProcureAI
             </BreadcrumbLink>
           </BreadcrumbItem>
           {segments.map((seg, i) => (
@@ -99,8 +99,8 @@ export function Topbar() {
                 {i === segments.length - 1 ? (
                   <BreadcrumbPage>{labels[seg] ?? seg}</BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink asChild>
-                    <Link href={`/${seg}`}>{labels[seg] ?? seg}</Link>
+                  <BreadcrumbLink render={<Link href={`/${seg}`} />}>
+                    {labels[seg] ?? seg}
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>
@@ -132,15 +132,17 @@ export function Topbar() {
         </Button>
 
         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" className="relative" aria-label="Notifications">
-              <Bell className="size-4" />
-              <span className="absolute -right-0.5 -top-0.5 flex size-2.5 items-center justify-center">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60" />
-                <span className="relative inline-flex size-2 rounded-full bg-primary" />
-              </span>
-            </Button>
-          </PopoverTrigger>
+          <PopoverTrigger
+            render={
+              <Button variant="outline" size="icon" className="relative" aria-label="Notifications">
+                <Bell className="size-4" />
+                <span className="absolute -right-0.5 -top-0.5 flex size-2.5 items-center justify-center">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60" />
+                  <span className="relative inline-flex size-2 rounded-full bg-primary" />
+                </span>
+              </Button>
+            }
+          />
           <PopoverContent align="end" className="w-80 p-0">
             <div className="flex items-center justify-between border-b px-4 py-3">
               <span className="text-sm font-semibold">Notifications</span>
@@ -180,16 +182,18 @@ export function Topbar() {
         </Button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-9 gap-2 px-1.5">
-              <Avatar className="size-7">
-                <AvatarFallback className="bg-primary text-xs text-primary-foreground">
-                  AC
-                </AvatarFallback>
-              </Avatar>
-              <span className="hidden text-sm font-medium lg:inline">Alex Carter</span>
-            </Button>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" className="h-9 gap-2 px-1.5">
+                <Avatar className="size-7">
+                  <AvatarFallback className="bg-primary text-xs text-primary-foreground">
+                    AC
+                  </AvatarFallback>
+                </Avatar>
+                <span className="hidden text-sm font-medium lg:inline">Alex Carter</span>
+              </Button>
+            }
+          />
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
@@ -211,11 +215,9 @@ export function Topbar() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/">
-                <LogOut />
-                Sign out
-              </Link>
+            <DropdownMenuItem onClick={() => (window.location.href = "/")}>
+              <LogOut />
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

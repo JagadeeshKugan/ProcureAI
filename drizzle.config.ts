@@ -1,11 +1,15 @@
 import type { Config } from "drizzle-kit";
 
-export default {
+const config = {
   schema: "./lib/db/schema.ts",
   out: "./lib/db/migrations",
-  driver: "pg",
-  dbCredentials: {
-    connectionString: process.env.DATABASE_URL || "",
-  },
   casing: "snake_case",
-} satisfies Config;
+  // Configure for AWS Aurora PostgreSQL
+  // When DATABASE_URL is set, uncomment and adjust driver
+  // driver: "pg",
+  // dbCredentials: {
+  //   connectionString: process.env.DATABASE_URL!,
+  // },
+} as unknown as Config;
+
+export default config;

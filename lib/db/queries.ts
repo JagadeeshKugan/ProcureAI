@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { vendors } from "@/lib/db/schema";
-import { count, desc, gte } from "drizzle-orm";
+import { count, desc } from "drizzle-orm";
 
 /**
  * Fetch all vendors from the database
@@ -32,16 +32,11 @@ export async function getVendorStats() {
       .select({ count: count() })
       .from(vendors);
 
-    const highRatingVendors = await db
-      .select({ count: count() })
-      .from(vendors)
-      .where(gte(vendors.rating, 4.5));
-
     return {
       success: true,
       data: {
         total: totalVendors[0]?.count || 0,
-        highRating: highRatingVendors[0]?.count || 0,
+        highRating: 0,
       },
     };
   } catch (error) {
