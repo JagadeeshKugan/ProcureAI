@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Search, Bell, Moon, Sun, LogOut, User, Settings } from "lucide-react"
 import { useTheme } from "next-themes"
@@ -33,6 +33,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { CommandPalette } from "@/components/command-palette"
 
 const labels: Record<string, string> = {
@@ -65,8 +73,10 @@ const notifications = [
 
 export function Topbar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { setTheme, resolvedTheme } = useTheme()
   const [cmdOpen, setCmdOpen] = React.useState(false)
+  const [logoutOpen, setLogoutOpen] = React.useState(false)
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -78,6 +88,11 @@ export function Topbar() {
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [])
+
+  const handleLogout = () => {
+    setLogoutOpen(false)
+    router.push("/")
+  }
 
   const segments = pathname.split("/").filter(Boolean)
 
@@ -205,7 +220,7 @@ export function Topbar() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/profile")}>
                 <User />
                 Profile
               </DropdownMenuItem>
@@ -215,7 +230,7 @@ export function Topbar() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => (window.location.href = "/")}>
+            <DropdownMenuItem onClick={() => setLogoutOpen(true)}>
               <LogOut />
               Sign out
             </DropdownMenuItem>
@@ -224,6 +239,21 @@ export function Topbar() {
       </div>
 
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
+
+      <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Sign Out</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to sign out? You&apos;ll need to sign in again to access ProcureAI.
+          </AlertDialogDescription>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Sign Out
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   )
 }
