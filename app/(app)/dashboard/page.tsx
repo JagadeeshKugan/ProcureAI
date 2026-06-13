@@ -49,14 +49,16 @@ export default function DashboardPage() {
         title="Dashboard"
         description="Welcome back, Alex. Here is your procurement overview."
       >
-        <Button variant="outline" asChild>
-          <Link href="/requests">
-            <Plus data-icon="inline-start" />
-            New Request
-          </Link>
+        <Button
+          variant="outline"
+          render={<Link href="/requests" />}
+          nativeButton={false}
+        >
+          <Plus data-icon="inline-start" />
+          New Request
         </Button>
-        <Button asChild>
-          <Link href="/copilot">Ask Copilot</Link>
+        <Button render={<Link href="/copilot" />} nativeButton={false}>
+          Ask Copilot
         </Button>
       </PageHeader>
 

@@ -111,7 +111,7 @@ export default function RequestsPage() {
             />
           </div>
           <div className="flex gap-3">
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={(value) => setStatus(value ?? "All Statuses")}>
               <SelectTrigger className="w-[170px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -125,7 +125,7 @@ export default function RequestsPage() {
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <Select value={dept} onValueChange={setDept}>
+            <Select value={dept} onValueChange={(value) => setDept(value ?? "All Departments")}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Department" />
               </SelectTrigger>
@@ -223,12 +223,14 @@ function CreateRequestDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus data-icon="inline-start" />
-          Create New Request
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button>
+            <Plus data-icon="inline-start" />
+            Create New Request
+          </Button>
+        }
+      />
       <DialogContent className="sm:max-w-lg">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
