@@ -98,7 +98,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <Button className="w-fit gap-2">
+            <Button className="w-fit gap-2 cursor-pointer">
               <Edit2 className="size-4" />
               Edit Profile
             </Button>
@@ -229,16 +229,16 @@ export default function ProfilePage() {
           <CardTitle className="text-base">Security & Privacy</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button variant="outline" className="w-full justify-start gap-2">
+          <Button variant="outline" className="w-full justify-start gap-2 cursor-pointer">
             Change Password
           </Button>
-          <Button variant="outline" className="w-full justify-start gap-2">
+          <Button variant="outline" className="w-full justify-start gap-2 cursor-pointer">
             Two-Factor Authentication
           </Button>
-          <Button variant="outline" className="w-full justify-start gap-2">
+          <Button variant="outline" className="w-full justify-start gap-2 cursor-pointer">
             Active Sessions
           </Button>
-          <Button variant="outline" className="w-full justify-start gap-2">
+          <Button variant="outline" className="w-full justify-start gap-2 cursor-pointer">
             Privacy Settings
           </Button>
         </CardContent>

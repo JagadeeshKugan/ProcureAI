@@ -62,9 +62,8 @@ export default function VendorProfilePage({
       <Button
         variant="ghost"
         size="sm"
-        className="w-fit"
+        className="w-fit cursor-pointer"
         render={<Link href="/vendors" />}
-        nativeButton={false}
       >
         <ArrowLeft data-icon="inline-start" />
         Back to Vendors
@@ -102,11 +101,16 @@ export default function VendorProfilePage({
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" className="cursor-pointer">
             <MessageSquare data-icon="inline-start" />
             Message
           </Button>
-          <Button>Create RFQ</Button>
+          <Button
+            className="cursor-pointer"
+            render={<Link href={`/vendors/${id}/create-rfq`} />}
+          >
+            Create RFQ
+          </Button>
         </div>
       </div>
 
@@ -275,7 +279,7 @@ export default function VendorProfilePage({
                           </span>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" className="cursor-pointer">
                         Download
                       </Button>
                     </div>

@@ -225,7 +225,7 @@ function CreateRequestDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button>
+          <Button className="cursor-pointer">
             <Plus data-icon="inline-start" />
             Create New Request
           </Button>
@@ -282,10 +282,10 @@ function CreateRequestDialog() {
             </Field>
           </FieldGroup>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="cursor-pointer">
               Cancel
             </Button>
-            <Button type="submit">Submit Request</Button>
+            <Button type="submit" className="cursor-pointer">Submit Request</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -381,10 +381,10 @@ function RequestDetailsDrawer({
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1">
+                <Button variant="outline" className="flex-1 cursor-pointer">
                   Reject
                 </Button>
-                <Button className="flex-1">Approve &amp; Route to RFQ</Button>
+                <Button className="flex-1 cursor-pointer">Approve &amp; Route to RFQ</Button>
               </div>
             </div>
           </>

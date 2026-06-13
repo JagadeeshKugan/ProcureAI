@@ -62,7 +62,7 @@ export default function VendorsPage() {
         title="Vendor Management"
         description="Evaluate, compare, and manage your supplier network with AI scoring."
       >
-        <Button>
+        <Button className="cursor-pointer">
           <Plus data-icon="inline-start" />
           Add Vendor
         </Button>
