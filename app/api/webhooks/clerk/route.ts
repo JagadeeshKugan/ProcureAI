@@ -1,8 +1,5 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 
 const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || "";
 
@@ -20,13 +17,19 @@ type ClerkEvent = {
   object: string;
 };
 
+export const dynamic = "force-dynamic"; // Prevent static generation for webhook
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   // Skip if running during build
-  if (process.env.NODE_ENV === "development" && !process.env.DATABASE_URL) {
-    return new Response("Build mode - webhook skipped", { status: 200 });
+  if (!process.env.DATABASE_URL) {
+    return new Response("Database not configured", { status: 503 });
   }
+
+  // Lazy import database modules
+  const { db } = await import("@/lib/db");
+  const { users } = await import("@/lib/db/schema");
+  const { eq } = await import("drizzle-orm");
 
   const headersList = await headers();
   const svix_id = headersList.get("svix-id");
