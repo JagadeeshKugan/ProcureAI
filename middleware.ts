@@ -10,42 +10,30 @@ const isPublicRoute = createRouteMatcher([
   "/",
 ]);
 
-export default clerkMiddleware(
-  async (auth, req) => {
-    try {
-      // If it's a public route, allow it without checking auth
-      if (isPublicRoute(req)) {
-        return NextResponse.next();
-      }
-
-      // For protected routes, check authentication if Clerk is configured
-      if (process.env.CLERK_SECRET_KEY) {
-        const { userId } = await auth();
-
-        if (!userId) {
-          return (await auth()).redirectToSignIn();
-        }
-      }
-
-      return NextResponse.next();
-    } catch (error) {
-      // If middleware fails, allow request to pass through
-      // The app will handle auth at the component level
-      console.warn("[Middleware] Error in auth middleware:", error);
+export default clerkMiddleware(async (auth, req) => {
+  try {
+    // If it's a public route, allow it without checking auth
+    if (isPublicRoute(req)) {
       return NextResponse.next();
     }
-  },
-  {
-    // Unauthenticated paths that don't need Clerk
-    unauthenticatedPaths: [
-      "/sign-in",
-      "/sign-up",
-      "/api/health",
-      "/api/webhooks",
-      "/",
-    ],
+
+    // For protected routes, check authentication if Clerk is configured
+    if (process.env.CLERK_SECRET_KEY) {
+      const { userId } = await auth();
+
+      if (!userId) {
+        return (await auth()).redirectToSignIn();
+      }
+    }
+
+    return NextResponse.next();
+  } catch (error) {
+    // If middleware fails, allow request to pass through
+    // The app will handle auth at the component level
+    console.warn("[Middleware] Error in auth middleware:", error);
+    return NextResponse.next();
   }
-);
+});
 
 export const config = {
   matcher: [
