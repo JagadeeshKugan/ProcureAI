@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
+import { ClerkProvider } from "@clerk/nextjs"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -26,20 +27,22 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn(
-        "antialiased bg-background",
-        fontMono.variable,
-        "font-sans",
-        geist.variable,
-      )}
-    >
-      <body>
-        <ThemeProvider>{children}</ThemeProvider>
-        <Toaster position="top-right" />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html
+        lang="en"
+        suppressHydrationWarning
+        className={cn(
+          "antialiased bg-background",
+          fontMono.variable,
+          "font-sans",
+          geist.variable,
+        )}
+      >
+        <body>
+          <ThemeProvider>{children}</ThemeProvider>
+          <Toaster position="top-right" />
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

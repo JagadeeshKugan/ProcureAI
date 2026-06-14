@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Search, Bell, Moon, Sun, LogOut, User, Settings } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useUser, useClerk } from "@clerk/nextjs"
+import { useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -42,6 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { CommandPalette } from "@/components/command-palette"
+import { syncUserToDatabase } from "@/lib/auth/server"
 
 const labels: Record<string, string> = {
   dashboard: "Dashboard",
@@ -75,8 +78,19 @@ export function Topbar() {
   const pathname = usePathname()
   const router = useRouter()
   const { setTheme, resolvedTheme } = useTheme()
+  const { user, isLoaded } = useUser()
+  const { signOut } = useClerk()
   const [cmdOpen, setCmdOpen] = React.useState(false)
   const [logoutOpen, setLogoutOpen] = React.useState(false)
+
+  // Sync user to database on mount
+  useEffect(() => {
+    if (isLoaded && user) {
+      syncUserToDatabase().catch((error) => {
+        console.error("[Topbar] Failed to sync user:", error)
+      })
+    }
+  }, [isLoaded, user])
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -89,9 +103,10 @@ export function Topbar() {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setLogoutOpen(false)
-    router.push("/")
+    await signOut()
+    router.push("/sign-in")
   }
 
   const segments = pathname.split("/").filter(Boolean)
@@ -202,19 +217,28 @@ export function Topbar() {
               <Button variant="ghost" className="h-9 gap-2 px-1.5">
                 <Avatar className="size-7">
                   <AvatarFallback className="bg-primary text-xs text-primary-foreground">
-                    AC
+                    {user?.firstName?.charAt(0) || "U"}
+                    {user?.lastName?.charAt(0) || ""}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden text-sm font-medium lg:inline">Alex Carter</span>
+                <span className="hidden text-sm font-medium lg:inline">
+                  {user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.emailAddresses[0]?.emailAddress || "User"}
+                </span>
               </Button>
             }
           />
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span className="text-sm font-medium">Alex Carter</span>
+                <span className="text-sm font-medium">
+                  {user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.emailAddresses[0]?.emailAddress || "User"}
+                </span>
                 <span className="text-xs text-muted-foreground">
-                  Head of Procurement
+                  {(user?.unsafeMetadata?.role as string) || "buyer"}
                 </span>
               </div>
             </DropdownMenuLabel>

@@ -12,14 +12,18 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-// Users table
+// Users table - synced from Clerk
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
+  clerkId: varchar("clerk_id", { length: 255 }).notNull().unique(), // Clerk user ID
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
-  company: varchar("company", { length: 255 }).notNull(),
-  role: varchar("role", { length: 50 }).notNull().default("user"), // user, manager, admin
+  imageUrl: text("image_url"), // Clerk avatar
+  role: varchar("role", { length: 50 }).notNull().default("buyer"), // buyer, supplier, admin
+  companyId: uuid("company_id"), // References organization
+  company: varchar("company", { length: 255 }), // Company name
   status: varchar("status", { length: 20 }).notNull().default("active"), // active, inactive
+  metadata: jsonb("metadata"), // Additional user data from Clerk
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
