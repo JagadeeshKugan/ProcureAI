@@ -95,6 +95,7 @@ export default function SignInPage() {
               appearance={{
                 elements: {
                   rootBox: "w-full",
+                  footerAction: "hidden",
                   card: "shadow-none border-none bg-transparent p-0",
                   formFieldInput:
                     "rounded-lg border border-border bg-background text-foreground",
