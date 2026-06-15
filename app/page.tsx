@@ -11,8 +11,15 @@ export default function HomePage() {
   useEffect(() => {
     if (isLoaded) {
       if (user) {
-        // User is authenticated, redirect to dashboard
-        router.push("/dashboard")
+        // Get user role from metadata
+        const userRole = user.publicMetadata?.role || "employee"
+
+        // Route based on role
+        if (userRole === "vendor") {
+          router.push("/vendor/dashboard")
+        } else {
+          router.push("/dashboard")
+        }
       } else {
         // User is not authenticated, redirect to sign-in
         router.push("/sign-in")
@@ -30,3 +37,4 @@ export default function HomePage() {
     </div>
   )
 }
+
