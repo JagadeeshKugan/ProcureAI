@@ -11,7 +11,7 @@ import {
   InputGroupButton,
   InputGroupTextarea,
 } from "@/components/ui/input-group"
-import { cn } from "@/lib/utils"
+import { cn } from "@/src/lib/utils"
 import { ArrowUp, Sparkles, User } from "lucide-react"
 
 interface Message {

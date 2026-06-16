@@ -20,28 +20,16 @@ export async function GET() {
 
     // If DATABASE_URL is set, attempt connection check
     try {
-      const { checkDatabaseHealth, getVendorStats } = await import("@/lib/db/queries");
-      const dbHealth = await checkDatabaseHealth();
+      const { getDb } = await import("@/src/db");
+      const db = getDb();
       
-      if (!dbHealth.success) {
-        return NextResponse.json(
-          { 
-            status: "warning", 
-            message: "Database configured but connection failed",
-            database: "error",
-            details: dbHealth.error 
-          },
-          { status: 503 }
-        );
-      }
-
-      const stats = await getVendorStats();
+      // Simple health check query
+      await db.execute("SELECT 1");
 
       return NextResponse.json({
         status: "ok",
         message: "All systems operational",
         database: "connected",
-        stats: stats.data,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

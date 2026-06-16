@@ -29,7 +29,7 @@ import {
   monthlyTrend,
   vendorPerformance,
   formatCurrency,
-} from "@/lib/data"
+} from "@/src/lib/data"
 
 const spendConfig = {
   spend: { label: "Spend", color: "var(--chart-1)" },

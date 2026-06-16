@@ -5,7 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
-import { cn } from "@/lib/utils"
+import { cn } from "@/src/lib/utils"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 

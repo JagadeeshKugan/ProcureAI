@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { cn } from "@/src/lib/utils"
 
 const statusStyles: Record<string, string> = {
   // Request statuses

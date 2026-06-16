@@ -1,7 +1,7 @@
 import { TrendingUp, TrendingDown } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { cn } from "@/src/lib/utils"
 
 export function KpiCard({
   label,

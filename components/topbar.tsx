@@ -44,7 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { CommandPalette } from "@/components/command-palette"
-import { syncUserToDatabase } from "@/lib/auth/server"
+import { syncUserToDatabase } from "@/src/lib/auth/server"
 
 const labels: Record<string, string> = {
   dashboard: "Dashboard",

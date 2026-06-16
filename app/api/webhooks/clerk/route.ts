@@ -27,8 +27,7 @@ export async function POST(req: Request) {
   }
 
   // Lazy import database modules
-  const { db } = await import("@/lib/db");
-  const { users } = await import("@/lib/db/schema");
+  const { getDb, schema } = await import("@/src/db");
   const { eq } = await import("drizzle-orm");
 
   const headersList = await headers();
@@ -61,62 +60,41 @@ export async function POST(req: Request) {
   const email = evt.data.email_addresses[0]?.email_address;
   const firstName = evt.data.first_name || "";
   const lastName = evt.data.last_name || "";
-  const imageUrl = evt.data.image_url;
-  const role = (evt.data.private_metadata?.role as string) || "buyer";
-  const company = evt.data.private_metadata?.company as string;
-  const companyId = evt.data.private_metadata?.companyId as string;
+  const role = (evt.data.public_metadata?.role as string) || "employee";
+
+  const db = getDb();
 
   try {
     if (evt.type === "user.created") {
       // Create new user
-      await db.insert(users).values({
+      await db.insert(schema.users).values({
         clerkId,
         email,
         name: `${firstName} ${lastName}`.trim(),
-        imageUrl,
         role,
-        company,
-        companyId,
-        status: "active",
-        metadata: {
-          clerkMetadata: evt.data.public_metadata,
-          createdVia: "webhook",
-          createdAt: new Date().toISOString(),
-        },
       });
 
       console.log("[Webhook] User created:", email);
     } else if (evt.type === "user.updated") {
       // Update existing user
       await db
-        .update(users)
+        .update(schema.users)
         .set({
           email,
           name: `${firstName} ${lastName}`.trim(),
-          imageUrl,
           role,
-          company,
-          companyId,
-          metadata: {
-            clerkMetadata: evt.data.public_metadata,
-            lastUpdated: new Date().toISOString(),
-          },
           updatedAt: new Date(),
         })
-        .where(eq(users.clerkId, clerkId));
+        .where(eq(schema.users.clerkId, clerkId));
 
       console.log("[Webhook] User updated:", email);
     } else if (evt.type === "user.deleted") {
-      // Mark user as inactive instead of deleting
+      // Delete user
       await db
-        .update(users)
-        .set({
-          status: "inactive",
-          updatedAt: new Date(),
-        })
-        .where(eq(users.clerkId, clerkId));
+        .delete(schema.users)
+        .where(eq(schema.users.clerkId, clerkId));
 
-      console.log("[Webhook] User marked inactive:", email);
+      console.log("[Webhook] User deleted:", email);
     }
 
     return new Response("Webhook processed successfully", { status: 200 });

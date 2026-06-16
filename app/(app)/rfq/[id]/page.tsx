@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
-import { cn } from "@/lib/utils"
-import { rfqs, quoteComparison, formatCurrency, type QuoteLine } from "@/lib/data"
+import { cn } from "@/src/lib/utils"
+import { rfqs, quoteComparison, formatCurrency, type QuoteLine } from "@/src/lib/data"
 import {
   ArrowLeft,
   Award,

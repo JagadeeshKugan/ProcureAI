@@ -13,8 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { recentActivity, type Activity } from "@/lib/data"
-import { cn } from "@/lib/utils"
+import { recentActivity, type Activity } from "@/src/lib/data"
+import { cn } from "@/src/lib/utils"
 
 const iconMap: Record<Activity["type"], React.ComponentType<{ className?: string }>> = {
   request: FileText,

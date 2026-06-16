@@ -22,7 +22,7 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { rfqs, formatCurrency } from "@/lib/data"
+import { rfqs, formatCurrency } from "@/src/lib/data"
 import { Plus, Search, Sparkles } from "lucide-react"
 
 export default function RfqPage() {

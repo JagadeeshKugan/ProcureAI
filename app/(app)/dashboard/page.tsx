@@ -19,7 +19,7 @@ import {
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { kpis, formatCurrency } from "@/lib/data"
+import { kpis, formatCurrency } from "@/src/lib/data"
 
 const quickActions = [
   {

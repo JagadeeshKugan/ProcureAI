@@ -1,8 +1,7 @@
 "use server";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { getDb, schema } from "@/src/db";
 import { eq } from "drizzle-orm";
 
 /**
@@ -19,53 +18,42 @@ export async function syncUserToDatabase() {
       throw new Error("User not authenticated");
     }
 
+    const db = getDb();
+
     // Prepare user data from Clerk
     const userData = {
       clerkId: userId,
       email: user.emailAddresses[0]?.emailAddress || "",
       name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username || "",
-      imageUrl: user.imageUrl || null,
-      // Extract role from Clerk unsafeMetadata (accessible in client and server actions)
-      role: (user.unsafeMetadata?.role as string) || "buyer",
-      company: (user.unsafeMetadata?.company as string) || null,
-      companyId: (user.unsafeMetadata?.companyId as string) || null,
-      status: "active",
-      metadata: {
-        clerkMetadata: user.publicMetadata,
-        lastSyncedAt: new Date().toISOString(),
-      },
+      // Extract role from Clerk publicMetadata
+      role: (user.publicMetadata?.role as string) || "employee",
     };
 
     // Check if user exists
     const existingUser = await db
       .select()
-      .from(users)
-      .where(eq(users.clerkId, userId))
+      .from(schema.users)
+      .where(eq(schema.users.clerkId, userId))
       .limit(1);
 
     if (existingUser.length > 0) {
       // Update existing user
       const result = await db
-        .update(users)
+        .update(schema.users)
         .set({
           email: userData.email,
           name: userData.name,
-          imageUrl: userData.imageUrl,
           role: userData.role,
-          company: userData.company,
-          companyId: userData.companyId,
-          status: userData.status,
-          metadata: userData.metadata,
           updatedAt: new Date(),
         })
-        .where(eq(users.clerkId, userId))
+        .where(eq(schema.users.clerkId, userId))
         .returning();
 
       console.log("[Auth] User updated:", result[0]?.email);
       return result[0] || null;
     } else {
       // Create new user
-      const result = await db.insert(users).values(userData).returning();
+      const result = await db.insert(schema.users).values(userData).returning();
 
       console.log("[Auth] New user created:", result[0]?.email);
       return result[0] || null;
@@ -87,10 +75,11 @@ export async function getCurrentUser() {
       return null;
     }
 
+    const db = getDb();
     const dbUser = await db
       .select()
-      .from(users)
-      .where(eq(users.clerkId, userId))
+      .from(schema.users)
+      .where(eq(schema.users.clerkId, userId))
       .limit(1);
 
     return dbUser[0] || null;

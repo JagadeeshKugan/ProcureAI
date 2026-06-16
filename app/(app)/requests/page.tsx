@@ -38,7 +38,7 @@ import {
   purchaseRequests,
   formatCurrency,
   type PurchaseRequest,
-} from "@/lib/data"
+} from "@/src/lib/data"
 
 const departments = [
   "All Departments",
