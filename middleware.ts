@@ -1,18 +1,75 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-export default clerkMiddleware((auth, request) => {
-  // clerkMiddleware handles all authentication automatically
-  // Just pass through - Clerk will handle redirects
-  return NextResponse.next();
+// Public routes (NO auth required)
+const isPublicRoute = createRouteMatcher([
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/api/health",
+  "/api/webhooks/(.*)",
+  "/",
+]);
+
+// Vendor-only routes
+const isVendorRoute = createRouteMatcher([
+  "/vendor(.*)",
+]);
+
+// Internal app routes
+const isInternalRoute = createRouteMatcher([
+  "/dashboard(.*)",
+  "/requests(.*)",
+  "/approvals(.*)",
+  "/vendors(.*)",
+  "/analytics(.*)",
+  "/settings(.*)",
+  "/department(.*)",
+  "/procurement(.*)",
+  "/finance(.*)",
+]);
+
+export default clerkMiddleware(async (auth, req) => {
+  try {
+    // Allow public routes
+    if (isPublicRoute(req)) {
+      return NextResponse.next();
+    }
+
+    // ✅ IMPORTANT: Must await auth()
+    const { userId, sessionClaims } = await auth();
+
+    // Not logged in → redirect safely
+    if (!userId) {
+      return NextResponse.redirect(new URL("/sign-in", req.url));
+    }
+
+    // SAFE role extraction (never trust undefined metadata)
+    const userRole =
+      (sessionClaims?.metadata as any)?.role ?? "employee";
+
+    // Vendor cannot access internal routes
+    if (isInternalRoute(req) && userRole === "vendor") {
+      return NextResponse.redirect(new URL("/vendor/dashboard", req.url));
+    }
+
+    // Non-vendor cannot access vendor routes
+    if (isVendorRoute(req) && userRole !== "vendor") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    return NextResponse.next();
+  } catch (error) {
+    console.error("[Middleware Error]", error);
+
+    // NEVER crash middleware in production (VERY IMPORTANT)
+    return NextResponse.next();
+  }
 });
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
+    // safer matcher (prevents favicon + asset crashes)
+    "/((?!_next|.*\\..*).*)",
     "/(api|trpc)(.*)",
   ],
 };
-
