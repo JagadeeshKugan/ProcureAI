@@ -34,30 +34,31 @@ export default clerkMiddleware(async (auth, req) => {
 
     // For protected routes, check authentication if Clerk is configured
     if (process.env.CLERK_SECRET_KEY) {
-      const { userId } = await auth();
+      const authObj = await auth();
+      const { userId, sessionClaims } = authObj;
 
       if (!userId) {
-        return (await auth()).redirectToSignIn();
+        return authObj.redirectToSignIn();
       }
 
-      // Get the user object to check role
-      const session = await auth();
-      const userRole = (session.sessionClaims?.metadata as any)?.role || "employee";
+      // Get user role from metadata, default to "employee"
+      const userRole = (sessionClaims?.metadata as any)?.role || "employee";
 
       // Route protection: vendors can't access internal routes
-      if (isVendorRoute(req) && userRole !== "vendor") {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
+      if (isInternalRoute(req) && userRole === "vendor") {
+        return NextResponse.redirect(new URL("/vendor/dashboard", req.url));
       }
 
       // Route protection: internal users can't access vendor routes
-      if (isInternalRoute(req) && userRole === "vendor") {
-        return NextResponse.redirect(new URL("/vendor/dashboard", req.url));
+      if (isVendorRoute(req) && userRole !== "vendor") {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     }
 
     return NextResponse.next();
   } catch (error) {
-    console.warn("[Middleware] Error in auth middleware:", error);
+    console.error("[Middleware] Error in auth middleware:", error);
+    // Allow request to continue on error rather than blocking
     return NextResponse.next();
   }
 });

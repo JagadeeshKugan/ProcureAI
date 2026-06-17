@@ -11,7 +11,8 @@ import {
   Sparkles,
   ScrollText,
   Boxes,
-  User,
+  BarChart3,
+  PlusCircle,
 } from "lucide-react"
 
 import {
@@ -31,11 +32,13 @@ import { cn } from "@/lib/utils"
 
 const mainNav = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { title: "My Requests", href: "/department", icon: PlusCircle },
   { title: "Purchase Requests", href: "/requests", icon: FileText },
   { title: "Vendors", href: "/vendors", icon: Building2 },
   { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
   { title: "Quote Comparison", href: "/compare", icon: GitCompareArrows },
   { title: "Purchase Orders", href: "/orders", icon: ScrollText },
+  { title: "Finance Analytics", href: "/finance", icon: BarChart3 },
 ]
 
 const aiNav = [{ title: "Procurement Copilot", href: "/copilot", icon: Sparkles }]
@@ -129,7 +132,7 @@ export function AppSidebar() {
               isActive={pathname === "/profile"}
               tooltip="Profile"
             >
-              <User />
+              <BarChart3 />
               <span>Profile</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
