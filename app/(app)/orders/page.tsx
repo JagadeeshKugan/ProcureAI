@@ -59,11 +59,11 @@ export default function OrdersPage() {
         title="Purchase Orders"
         description="Track issued orders and delivery status across all vendors."
       >
-        <Button variant="outline">
+        <Button variant="outline" className="cursor-pointer">
           <Download data-icon="inline-start" />
           Export
         </Button>
-        <Button>
+        <Button className="cursor-pointer">
           <Plus data-icon="inline-start" />
           New Order
         </Button>
@@ -217,11 +217,11 @@ export default function OrdersPage() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Button>
+                  <Button className="cursor-pointer">
                     <Truck data-icon="inline-start" />
                     Track Shipment
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" className="cursor-pointer">
                     <Download data-icon="inline-start" />
                     Download PO PDF
                   </Button>

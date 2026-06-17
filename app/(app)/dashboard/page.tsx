@@ -53,11 +53,12 @@ export default function DashboardPage() {
           variant="outline"
           render={<Link href="/requests" />}
           nativeButton={false}
+          className="cursor-pointer"
         >
           <Plus data-icon="inline-start" />
           New Request
         </Button>
-        <Button render={<Link href="/copilot" />} nativeButton={false}>
+        <Button render={<Link href="/copilot" />} nativeButton={false} className="cursor-pointer">
           Ask Copilot
         </Button>
       </PageHeader>

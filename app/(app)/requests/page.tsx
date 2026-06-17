@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { Plus, Search, CalendarDays, FileText, Paperclip } from "lucide-react"
 
 import { PageHeader } from "@/components/page-header"
@@ -31,24 +32,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Textarea } from "@/components/ui/textarea"
-import { Separator } from "@/components/ui/separator"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
-import { toast } from "sonner"
+import { Separator } from "@/components/ui/separator"
 import {
   purchaseRequests,
   formatCurrency,
@@ -95,7 +80,10 @@ export default function RequestsPage() {
         title="Purchase Requests"
         description="Track, approve, and route procurement requests across departments."
       >
-        <CreateRequestDialog />
+        <Button render={<Link href="/requests/create" />} nativeButton={false} className="cursor-pointer">
+          <Plus data-icon="inline-start" />
+          Create New Request
+        </Button>
       </PageHeader>
 
       <Card className="p-0">
@@ -210,89 +198,6 @@ export default function RequestsPage() {
   )
 }
 
-function CreateRequestDialog() {
-  const [open, setOpen] = React.useState(false)
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setOpen(false)
-    toast.success("Purchase request created", {
-      description: "Your request has been submitted for approval.",
-    })
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          <Button>
-            <Plus data-icon="inline-start" />
-            Create New Request
-          </Button>
-        }
-      />
-      <DialogContent className="sm:max-w-lg">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Create Purchase Request</DialogTitle>
-            <DialogDescription>
-              Describe what you need. AI will suggest the right category and
-              vendors.
-            </DialogDescription>
-          </DialogHeader>
-          <FieldGroup className="py-4">
-            <Field>
-              <FieldLabel htmlFor="title">Request title</FieldLabel>
-              <Input id="title" placeholder="e.g. 50x Standing Desks" required />
-            </Field>
-            <div className="grid grid-cols-2 gap-4">
-              <Field>
-                <FieldLabel htmlFor="dept">Department</FieldLabel>
-                <Select defaultValue="Engineering">
-                  <SelectTrigger id="dept">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {departments.slice(1).map((d) => (
-                        <SelectItem key={d} value={d}>
-                          {d}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="budget">Budget (USD)</FieldLabel>
-                <Input id="budget" type="number" placeholder="50000" required />
-              </Field>
-            </div>
-            <Field>
-              <FieldLabel htmlFor="need">Business need</FieldLabel>
-              <Textarea
-                id="need"
-                placeholder="Explain the business justification..."
-                rows={4}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="date">Required by</FieldLabel>
-              <Input id="date" type="date" required />
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">Submit Request</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 function RequestDetailsDrawer({
   request,
   onOpenChange,
@@ -381,10 +286,10 @@ function RequestDetailsDrawer({
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1">
+                <Button variant="outline" className="flex-1 cursor-pointer">
                   Reject
                 </Button>
-                <Button className="flex-1">Approve &amp; Route to RFQ</Button>
+                <Button className="flex-1 cursor-pointer">Approve &amp; Route to RFQ</Button>
               </div>
             </div>
           </>

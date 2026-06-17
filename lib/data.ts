@@ -11,6 +11,31 @@ export type RfqStatus = "Open" | "Closing Soon" | "Closed" | "Awarded"
 export type VendorStatus = "Active" | "Under Review" | "Inactive"
 export type PoStatus = "Draft" | "Issued" | "Acknowledged" | "Delivered" | "Cancelled"
 
+export const categories = [
+  "Office Supplies",
+  "IT Equipment",
+  "Furniture",
+  "Marketing Materials",
+  "Consulting Services",
+  "Software Licenses",
+  "Industrial Equipment",
+  "Raw Materials",
+  "Logistics & Shipping",
+  "Professional Services",
+]
+
+export const departments = [
+  "All Departments",
+  "Engineering",
+  "Marketing",
+  "Finance",
+  "Operations",
+  "Sales",
+  "HR",
+  "IT",
+  "Legal",
+]
+
 export interface PurchaseRequest {
   id: string
   title: string

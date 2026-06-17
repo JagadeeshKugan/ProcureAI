@@ -47,7 +47,7 @@ export default function RfqPage() {
         title="RFQ Management"
         description="Issue requests for quotes and let AI rank vendor responses."
       >
-        <Button>
+        <Button className="cursor-pointer">
           <Plus data-icon="inline-start" />
           Create RFQ
         </Button>
@@ -121,6 +121,7 @@ export default function RfqPage() {
                       size="sm"
                       render={<Link href={`/rfq/${rfq.id}`} />}
                       nativeButton={false}
+                      className="cursor-pointer"
                     >
                       <Sparkles data-icon="inline-start" />
                       Compare

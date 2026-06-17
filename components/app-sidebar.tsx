@@ -11,6 +11,7 @@ import {
   Sparkles,
   ScrollText,
   Boxes,
+  User,
 } from "lucide-react"
 
 import {
@@ -121,6 +122,18 @@ export function AppSidebar() {
             <div className="h-full w-[84%] rounded-full bg-primary" />
           </div>
         </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              render={<Link href="/profile" />}
+              isActive={pathname === "/profile"}
+              tooltip="Profile"
+            >
+              <User />
+              <span>Profile</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
