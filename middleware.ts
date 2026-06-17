@@ -28,15 +28,15 @@ const isInternalRoute = createRouteMatcher([
   "/finance(.*)",
 ]);
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   try {
     // Allow public routes
     if (isPublicRoute(req)) {
       return NextResponse.next();
     }
 
-    // ✅ IMPORTANT: NO await auth()
-    const { userId, sessionClaims } = auth();
+    // ✅ IMPORTANT: Must await auth()
+    const { userId, sessionClaims } = await auth();
 
     // Not logged in → redirect safely
     if (!userId) {
