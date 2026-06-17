@@ -23,49 +23,52 @@ const isInternalRoute = createRouteMatcher([
   "/vendors(.*)",
   "/analytics(.*)",
   "/settings(.*)",
+  "/department(.*)",
+  "/procurement(.*)",
+  "/finance(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
   try {
-    // If it's a public route, allow it without checking auth
+    // If it's a public route, allow it
     if (isPublicRoute(req)) {
       return NextResponse.next();
     }
 
-    // For protected routes, check authentication if Clerk is configured
-    if (process.env.CLERK_SECRET_KEY) {
-      const authObj = await auth();
-      const { userId, sessionClaims } = authObj;
+    // For protected routes, require authentication
+    const authSession = await auth();
 
-      if (!userId) {
-        return authObj.redirectToSignIn();
-      }
+    if (!authSession.userId) {
+      // Not authenticated - redirect to sign-in
+      return authSession.redirectToSignIn();
+    }
 
-      // Get user role from metadata, default to "employee"
-      const userRole = (sessionClaims?.metadata as any)?.role || "employee";
+    // Get user role from session claims
+    const userRole = (authSession.sessionClaims?.metadata as any)?.role || "employee";
 
-      // Route protection: vendors can't access internal routes
-      if (isInternalRoute(req) && userRole === "vendor") {
-        return NextResponse.redirect(new URL("/vendor/dashboard", req.url));
-      }
+    // Route protection: vendors can't access internal routes
+    if (isInternalRoute(req) && userRole === "vendor") {
+      return NextResponse.redirect(new URL("/vendor/dashboard", req.url));
+    }
 
-      // Route protection: internal users can't access vendor routes
-      if (isVendorRoute(req) && userRole !== "vendor") {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-      }
+    // Route protection: non-vendors can't access vendor routes
+    if (isVendorRoute(req) && userRole !== "vendor") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     return NextResponse.next();
   } catch (error) {
-    console.error("[Middleware] Error in auth middleware:", error);
-    // Allow request to continue on error rather than blocking
+    console.error("[Middleware] Error:", error);
+    // Continue request - let error handling happen in pages
     return NextResponse.next();
   }
 });
 
 export const config = {
   matcher: [
+    // Match all routes except static assets and Next.js internals
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Match API routes
     "/(api|trpc)(.*)",
   ],
 };
