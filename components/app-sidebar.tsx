@@ -12,6 +12,7 @@ import {
   ScrollText,
   Boxes,
   BarChart3,
+  PlusCircle,
 } from "lucide-react"
 
 import {
@@ -31,6 +32,7 @@ import { cn } from "@/lib/utils"
 
 const mainNav = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { title: "My Requests", href: "/department", icon: PlusCircle },
   { title: "Purchase Requests", href: "/requests", icon: FileText },
   { title: "Vendors", href: "/vendors", icon: Building2 },
   { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },

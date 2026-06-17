@@ -124,33 +124,46 @@ export class PurchaseRequestService {
     }
   }
 
-  async deletePurchaseRequest(
-    requestId: string,
-    performedBy: string
-  ): Promise<PurchaseRequestResponse> {
+  async getRequestStatusCounts(userId: string, department: string) {
     try {
-      // Create audit log before deletion
-      await this.auditRepository.create({
-        entityType: "purchase_request",
-        entityId: requestId,
-        action: "delete",
-        performedBy,
-      })
-
-      await this.prRepository.delete(requestId)
-
+      const requests = await this.prRepository.findByRequestedBy(userId)
+      
       return {
-        success: true,
+        pending: requests.filter((r: any) => r.status === "pending_approval").length,
+        approved: requests.filter((r: any) => r.status === "approved").length,
+        rejected: requests.filter((r: any) => r.status === "rejected").length,
+        converted: requests.filter((r: any) => r.status === "in_rfq").length,
+        total: requests.length,
       }
     } catch (error) {
-      console.error("[PurchaseRequestService] Error deleting purchase request:", error)
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to delete purchase request",
-      }
+      console.error("[PurchaseRequestService] Error getting status counts:", error)
+      throw error
+    }
+  }
+
+  async getRequestsWithAudit(userId: string) {
+    try {
+      const requests = await this.prRepository.findByRequestedBy(userId)
+      
+      // Fetch audit logs for each request
+      const requestsWithAudit = await Promise.all(
+        requests.map(async (req: any) => {
+          const auditLogs = await this.auditRepository.getByEntityId(
+            "purchase_request",
+            req.id,
+            10
+          )
+          return {
+            ...req,
+            auditLogs,
+          }
+        })
+      )
+      
+      return requestsWithAudit
+    } catch (error) {
+      console.error("[PurchaseRequestService] Error fetching requests with audit:", error)
+      throw error
     }
   }
 }
