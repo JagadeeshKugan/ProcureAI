@@ -1,6 +1,6 @@
 import { eq, and, desc } from "drizzle-orm"
-import { getDb, schema } from "@/src/db"
-import type { auditLogs } from "@/src/db/schema"
+import { getDb, schema } from "@/db"
+import type { auditLogs } from "@/db/schema"
 
 export type InsertAuditLog = typeof auditLogs.$inferInsert
 

@@ -27,7 +27,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { cn } from "@/src/lib/utils"
+import { cn } from "@/lib/utils"
 
 const mainNav = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },

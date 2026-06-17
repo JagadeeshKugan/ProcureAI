@@ -5,7 +5,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
-import { vendors, categories } from "@/src/lib/data"
+import { vendors, categories } from "@/lib/data"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {

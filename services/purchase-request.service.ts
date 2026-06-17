@@ -1,6 +1,6 @@
-import { PurchaseRequestRepository } from "@/src/repositories/purchase-request.repository"
-import { AuditLogRepository } from "@/src/repositories/audit-log.repository"
-import type { InsertPurchaseRequest } from "@/src/db/schema"
+import { PurchaseRequestRepository } from "@/repositories/purchase-request.repository"
+import { AuditLogRepository } from "@/repositories/audit-log.repository"
+import type { InsertPurchaseRequest } from "@/db/schema"
 
 export interface CreatePurchaseRequestInput {
   title: string

@@ -1,6 +1,6 @@
 import { eq, desc, and, like } from "drizzle-orm"
-import { getDb, schema } from "@/src/db"
-import type { InsertPurchaseRequest } from "@/src/db/schema"
+import { getDb, schema } from "@/db"
+import type { InsertPurchaseRequest } from "@/db/schema"
 
 export class PurchaseRequestRepository {
   private db = getDb()

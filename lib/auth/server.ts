@@ -1,7 +1,7 @@
 "use server";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { getDb, schema } from "@/src/db";
+import { getDb, schema } from "@/db";
 import { eq } from "drizzle-orm";
 
 /**

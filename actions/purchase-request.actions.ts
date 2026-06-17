@@ -1,12 +1,12 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
-import { PurchaseRequestService } from "@/src/services/purchase-request.service"
-import { UserService } from "@/src/services/user.service"
+import { PurchaseRequestService } from "@/services/purchase-request.service"
+import { UserService } from "@/services/user.service"
 import {
   createPurchaseRequestSchema,
   type CreatePurchaseRequestInput,
-} from "@/src/lib/validations"
+} from "@/lib/validations"
 
 export async function createPurchaseRequest(input: CreatePurchaseRequestInput) {
   try {

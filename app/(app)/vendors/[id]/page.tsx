@@ -25,7 +25,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
-import { vendors, purchaseOrders, formatCurrency } from "@/src/lib/data"
+import { vendors, purchaseOrders, formatCurrency } from "@/lib/data"
 import {
   ArrowLeft,
   FileText,

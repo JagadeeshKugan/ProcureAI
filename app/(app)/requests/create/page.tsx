@@ -36,7 +36,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { departments, categories } from "@/src/lib/data"
+import { departments, categories } from "@/lib/data"
 
 const priorities = [
   { value: "low", label: "Low", color: "bg-blue-500/10 text-blue-700 border-blue-200" },

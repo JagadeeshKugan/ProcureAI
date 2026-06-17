@@ -20,7 +20,7 @@ export async function GET() {
 
     // If DATABASE_URL is set, attempt connection check
     try {
-      const { getDb } = await import("@/src/db");
+      const { getDb } = await import("@/db");
       const db = getDb();
       
       // Simple health check query

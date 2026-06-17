@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm"
-import { getDb, schema } from "@/src/db"
-import type { users } from "@/src/db/schema"
+import { getDb, schema } from "@/db"
+import type { users } from "@/db/schema"
 
 export type InsertUser = typeof users.$inferInsert
 export type SelectUser = typeof users.$inferSelect

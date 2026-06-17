@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   }
 
   // Lazy import database modules
-  const { getDb, schema } = await import("@/src/db");
+  const { getDb, schema } = await import("@/db");
   const { eq } = await import("drizzle-orm");
 
   const headersList = await headers();

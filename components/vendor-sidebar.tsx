@@ -24,7 +24,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/src/lib/utils"
+import { cn } from "@/lib/utils"
 
 const navItems = [
   {

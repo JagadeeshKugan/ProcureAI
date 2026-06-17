@@ -26,7 +26,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group"
-import { vendors, formatCurrency } from "@/src/lib/data"
+import { vendors, formatCurrency } from "@/lib/data"
 import { MapPin, Plus, Search, Sparkles, Star } from "lucide-react"
 
 const categories = [

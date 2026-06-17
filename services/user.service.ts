@@ -1,5 +1,5 @@
-import { UserRepository } from "@/src/repositories/user.repository"
-import type { InsertUser } from "@/src/repositories/user.repository"
+import { UserRepository } from "@/repositories/user.repository"
+import type { InsertUser } from "@/repositories/user.repository"
 
 export interface SyncUserInput {
   clerkId: string

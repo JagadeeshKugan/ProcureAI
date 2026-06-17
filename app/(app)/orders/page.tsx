@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { purchaseOrders, formatCurrency, type PurchaseOrder } from "@/src/lib/data"
+import { purchaseOrders, formatCurrency, type PurchaseOrder } from "@/lib/data"
 import { Download, Plus, Search, Truck } from "lucide-react"
 
 export default function OrdersPage() {
