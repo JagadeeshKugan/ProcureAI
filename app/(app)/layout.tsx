@@ -1,6 +1,7 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
+import { ClerkSyncInit } from "@/components/clerk-sync-init"
 
 export default function AppLayout({
   children,
@@ -9,6 +10,7 @@ export default function AppLayout({
 }) {
   return (
     <SidebarProvider>
+      <ClerkSyncInit />
       <AppSidebar />
       <SidebarInset>
         <Topbar />
