@@ -7,8 +7,30 @@ import {
   jsonb,
   integer,
   uniqueIndex,
+  foreignKey,
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
+
+// Organizations table
+export const organizations = pgTable(
+  "organizations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clerkOrgId: text("clerk_org_id").unique().notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    clerkOrgIdIdx: uniqueIndex("clerk_org_id_idx").on(table.clerkOrgId),
+  })
+)
+
+export type InsertOrganization = typeof organizations.$inferInsert
+export type SelectOrganization = typeof organizations.$inferSelect
 
 // Users table
 export const users = pgTable(
@@ -16,7 +38,12 @@ export const users = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     clerkId: text("clerk_id").unique().notNull(),
+    organizationId: uuid("organization_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
     email: varchar("email", { length: 255 }).unique().notNull(),
+    firstName: varchar("first_name", { length: 255 }),
+    lastName: varchar("last_name", { length: 255 }),
     name: varchar("name", { length: 255 }),
     role: varchar("role", { length: 50 }).default("employee"), // 'employee', 'vendor', 'admin'
     companyName: varchar("company_name", { length: 255 }), // For vendors
@@ -29,6 +56,7 @@ export const users = pgTable(
   (table) => ({
     clerkIdIdx: uniqueIndex("clerk_id_idx").on(table.clerkId),
     emailIdx: uniqueIndex("email_idx").on(table.email),
+    organizationIdIdx: uniqueIndex("organization_id_idx").on(table.organizationId),
   })
 )
 

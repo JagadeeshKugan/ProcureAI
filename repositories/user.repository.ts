@@ -70,5 +70,14 @@ export class UserRepository {
     // Create new user
     return await this.create(data)
   }
+
+  async findByOrganizationId(organizationId: string) {
+    const result = await this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.organizationId, organizationId))
+
+    return result
+  }
 }
 
