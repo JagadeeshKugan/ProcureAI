@@ -32,7 +32,7 @@ export class AnalyticsService {
 
     // Get total spend
     const spendResult = await this.db
-      .select({ total: sql<number>`COALESCE(SUM(${schema.purchaseRequests.estimatedBudget}), 0)` })
+      .select({ total: sql<number>`COALESCE(SUM(CAST(${schema.purchaseRequests.estimatedTotal} AS NUMERIC)), 0)` })
       .from(schema.purchaseRequests)
       .where(whereClause)
 
@@ -48,7 +48,7 @@ export class AnalyticsService {
     const spendByDept = await this.db
       .select({
         dept: schema.purchaseRequests.department,
-        amount: sql<number>`COALESCE(SUM(${schema.purchaseRequests.estimatedBudget}), 0)`,
+        amount: sql<number>`COALESCE(SUM(CAST(${schema.purchaseRequests.estimatedTotal} AS NUMERIC)), 0)`,
       })
       .from(schema.purchaseRequests)
       .where(whereClause)
