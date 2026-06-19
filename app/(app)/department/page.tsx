@@ -6,6 +6,7 @@ import { CreateRequestForm } from "@/components/requestor/create-request-form"
 import { RequestTable } from "@/components/requestor/request-table"
 import { PurchaseRequestService } from "@/services/purchase-request.service"
 import { DepartmentRequestorClient } from "@/components/requestor/client"
+import { UserRepository } from "@/repositories/user.repository"
 
 export const metadata = {
   title: "My Purchase Requests - ProcureAI",
@@ -19,6 +20,14 @@ export default async function DepartmentRequestorPage() {
 
   if (!userId) {
     redirect("/sign-in")
+  }
+
+  // Get user organization
+  const userRepo = new UserRepository()
+  const user = await userRepo.findByClerkId(userId)
+  
+  if (!user || !user.organizationId) {
+    redirect("/")
   }
 
   const service = new PurchaseRequestService()
@@ -39,7 +48,11 @@ export default async function DepartmentRequestorPage() {
         converted={stats.converted}
       />
 
-      <DepartmentRequestorClient initialRequests={requests} userId={userId} />
+      <DepartmentRequestorClient 
+        initialRequests={requests} 
+        userId={user.id || userId} 
+        organizationId={user.organizationId}
+      />
     </div>
   )
 }

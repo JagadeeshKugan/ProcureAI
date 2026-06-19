@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useAuth } from "@clerk/nextjs"
 import { CreateRequestForm } from "./create-request-form"
 import { RequestTable } from "./request-table"
 import { RequestDetail } from "./request-detail"
@@ -14,8 +15,7 @@ interface RequestWithAudit {
   description?: string
   status: string
   priority: string
-  estimatedBudget: number
-  department: string
+  estimatedTotal: number
   createdAt: Date
   updatedAt: Date
   auditLogs?: any[]
@@ -24,11 +24,13 @@ interface RequestWithAudit {
 interface DepartmentRequestorClientProps {
   initialRequests: RequestWithAudit[]
   userId: string
+  organizationId: string
 }
 
 export function DepartmentRequestorClient({
   initialRequests,
   userId,
+  organizationId,
 }: DepartmentRequestorClientProps) {
   const [requests, setRequests] = useState<RequestWithAudit[]>(initialRequests)
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
@@ -38,7 +40,7 @@ export function DepartmentRequestorClient({
     title: string
     description: string
     quantity: number
-    estimatedBudget: number
+    unitPrice: number
     priority: string
   }) => {
     setIsLoading(true)
@@ -47,9 +49,10 @@ export function DepartmentRequestorClient({
         title: data.title,
         description: data.description,
         quantity: data.quantity,
-        estimatedBudget: data.estimatedBudget,
+        unitPrice: data.unitPrice,
         priority: data.priority,
         userId,
+        organizationId,
       })
 
       if (response.success) {

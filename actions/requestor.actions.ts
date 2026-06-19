@@ -6,9 +6,10 @@ export interface CreateRequestInput {
   title: string
   description: string
   quantity: number
-  estimatedBudget: number
+  unitPrice: number
   priority: string
   userId: string
+  organizationId: string
 }
 
 export async function createPurchaseRequestAction(input: CreateRequestInput) {
@@ -16,10 +17,16 @@ export async function createPurchaseRequestAction(input: CreateRequestInput) {
   const response = await service.createPurchaseRequest({
     title: input.title,
     description: input.description,
-    department: "engineering",
     priority: input.priority,
-    estimatedBudget: Math.round(input.estimatedBudget * 100),
+    organizationId: input.organizationId,
     requestedBy: input.userId,
+    items: [
+      {
+        itemName: input.title,
+        quantity: input.quantity,
+        estimatedUnitPrice: input.unitPrice,
+      },
+    ],
   })
 
   return response

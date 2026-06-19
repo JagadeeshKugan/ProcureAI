@@ -64,10 +64,12 @@ export class AnalyticsService {
       totalSpend,
       estimatedSavings,
       budgetUtilization,
-      spendByCategory: spendByDept.map((row) => ({
-        category: row.dept,
-        amount: row.amount,
-      })),
+      spendByCategory: spendByDept
+        .filter((row) => row.dept !== null)
+        .map((row) => ({
+          category: row.dept || "Other",
+          amount: row.amount,
+        })),
       monthlyTrend,
       costInsights,
     }
