@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Plus, Search, CalendarDays, FileText, Paperclip } from "lucide-react"
+import { Plus, Search, CalendarDays, FileText, Paperclip, CheckCircle, Clock } from "lucide-react"
+import { listPurchaseRequests } from "@/actions/purchase-request.actions"
 
 import { PageHeader } from "@/components/page-header"
 import { StatusBadge } from "@/components/status-badge"
@@ -40,6 +41,19 @@ import {
   type PurchaseRequest,
 } from "@/lib/data"
 
+interface DBRequest {
+  id: string
+  requestNumber: string
+  title: string
+  department?: string
+  estimatedTotal: string
+  currency: string
+  status: string
+  createdAt: Date
+  requestedBy: string
+  approvalRoute?: string
+}
+
 const departments = [
   "All Departments",
   "Engineering",
@@ -63,9 +77,51 @@ export default function RequestsPage() {
   const [search, setSearch] = React.useState("")
   const [dept, setDept] = React.useState("All Departments")
   const [status, setStatus] = React.useState("All Statuses")
-  const [selected, setSelected] = React.useState<PurchaseRequest | null>(null)
+  const [selected, setSelected] = React.useState<(PurchaseRequest & { approvalRoute?: string[] }) | null>(null)
+  const [dbRequests, setDbRequests] = React.useState<DBRequest[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
 
-  const filtered = purchaseRequests.filter((r) => {
+  // Load database requests
+  React.useEffect(() => {
+    const loadRequests = async () => {
+      try {
+        const result = await listPurchaseRequests(1, 50)
+        if (result.success && result.data?.requests) {
+          setDbRequests(result.data.requests as DBRequest[])
+        }
+      } catch (error) {
+        console.error("[RequestsPage] Failed to load requests:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadRequests()
+  }, [])
+
+  // Convert DB requests to mock format for display
+  const allRequests = React.useMemo(() => {
+    const converted = dbRequests.map((r) => ({
+      id: r.id,
+      title: r.title,
+      requester: "System User",
+      department: r.department || "Engineering",
+      budget: Number(r.estimatedTotal) || 0,
+      status: r.status === "draft" ? "Draft" : r.status === "pending_approval" ? "Pending Approval" : r.status === "approved" ? "Approved" : "In RFQ",
+      category: "Equipment",
+      createdDate: r.createdAt,
+      requiredDate: new Date(),
+      businessNeed: "",
+      attachments: [],
+      approvalRoute: r.approvalRoute ? JSON.parse(r.approvalRoute) : [],
+    }))
+
+    // Combine with mock data, sorted by newest first
+    return [...converted, ...purchaseRequests].sort(
+      (a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
+    )
+  }, [dbRequests])
+
+  const filtered = allRequests.filter((r) => {
     const matchesSearch =
       r.title.toLowerCase().includes(search.toLowerCase()) ||
       r.requester.toLowerCase().includes(search.toLowerCase())
@@ -202,9 +258,11 @@ function RequestDetailsDrawer({
   request,
   onOpenChange,
 }: {
-  request: PurchaseRequest | null
+  request: (PurchaseRequest & { approvalRoute?: string[] }) | null
   onOpenChange: (open: boolean) => void
 }) {
+  const approvalCount = request?.approvalRoute?.length || 0
+  
   return (
     <Sheet open={!!request} onOpenChange={onOpenChange}>
       <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-md">
@@ -244,53 +302,78 @@ function RequestDetailsDrawer({
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium">Business Need</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {request.businessNeed}
-                </p>
-              </div>
+              {request.businessNeed && (
+                <div>
+                  <h3 className="text-sm font-medium">Business Need</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {request.businessNeed}
+                  </p>
+                </div>
+              )}
 
               <Separator />
 
-              <div>
-                <h3 className="text-sm font-medium">
-                  Attachments ({request.attachments.length})
-                </h3>
-                <div className="mt-2 flex flex-col gap-2">
-                  {request.attachments.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No attachments provided.
-                    </p>
-                  ) : (
-                    request.attachments.map((file) => (
-                      <div
-                        key={file.name}
-                        className="flex items-center gap-3 rounded-lg border p-2.5"
-                      >
-                        <div className="flex size-8 items-center justify-center rounded bg-muted">
-                          <Paperclip className="size-4 text-muted-foreground" />
+              {/* Approval Route */}
+              {approvalCount > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium">Approval Route</h3>
+                  <div className="mt-3 space-y-2">
+                    {Array.from({ length: approvalCount }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 text-sm">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">
-                            {file.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {file.size}
-                          </p>
-                        </div>
+                        <span className="text-muted-foreground">
+                          Approver {i + 1}
+                        </span>
                       </div>
-                    ))
-                  )}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 cursor-pointer">
-                  Reject
-                </Button>
-                <Button className="flex-1 cursor-pointer">Approve &amp; Route to RFQ</Button>
-              </div>
+              {request.attachments.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <h3 className="text-sm font-medium">
+                      Attachments ({request.attachments.length})
+                    </h3>
+                    <div className="mt-2 flex flex-col gap-2">
+                      {request.attachments.map((file) => (
+                        <div
+                          key={file.name}
+                          className="flex items-center gap-3 rounded-lg border p-2.5"
+                        >
+                          <div className="flex size-8 items-center justify-center rounded bg-muted">
+                            <Paperclip className="size-4 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {file.size}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {request.status !== "Draft" && (
+                <>
+                  <Separator />
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1 cursor-pointer">
+                      Reject
+                    </Button>
+                    <Button className="flex-1 cursor-pointer">Approve &amp; Route to RFQ</Button>
+                  </div>
+                </>
+              )}
             </div>
           </>
         ) : null}
