@@ -59,7 +59,7 @@ export class PurchaseRequestService {
 
       // Create audit log
       await this.auditRepository.create({
-        organizationId,
+        organizationId: input.organizationId,
         entityType: "purchase_request",
         entityId: purchaseRequest.id,
         action: "create",
