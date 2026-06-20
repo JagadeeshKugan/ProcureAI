@@ -22,15 +22,18 @@ interface RequestDetail {
   priority: string | null
   estimatedTotal: string | null
   currency: string | null
-  status: string
-  requestedByName: string
-  requestedByEmail: string
+  status: string | null
+  requestedByName: string | null
+  requestedByEmail: string | null
   createdAt: Date
   updatedAt: Date
 }
 
 interface FinanceApproval {
   id: string
+  organizationId: string
+  requestId: string
+  approvedBy: string
   status: string
   budgetCode: string | null
   costCenter: string | null
@@ -42,9 +45,16 @@ interface FinanceApproval {
 
 interface PurchaseOrder {
   id: string
+  organizationId: string
+  requestId: string
+  vendorId: string | null
   poNumber: string
   status: string
-  totalAmount: string
+  totalAmount: string | null
+  currency: string | null
+  expectedDelivery: Date | null
+  createdBy: string
+  issuedAt: Date | null
   createdAt: Date
 }
 
@@ -169,8 +179,8 @@ export default function RequestDetailPage() {
         <Card className="p-4">
           <div className="text-sm font-medium text-muted-foreground">Status</div>
           <div className="mt-2">
-            <Badge className={statusColors[request.status] || "bg-gray-100 text-gray-800"}>
-              {request.status.replace(/_/g, " ")}
+            <Badge className={statusColors[request.status ?? 'draft'] || "bg-gray-100 text-gray-800"}>
+              {request.status ?? "draft".replace(/_/g, " ")}
             </Badge>
           </div>
         </Card>
