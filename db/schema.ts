@@ -83,6 +83,9 @@ export const purchaseRequests = pgTable(
     requestedBy: uuid("requested_by")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    approvalRoute: jsonb("approval_route"), // Array of approver user IDs in sequence
+    departmentBudgetRemaining: numeric("department_budget_remaining", { precision: 12, scale: 2 }),
+    attachments: jsonb("attachments"), // Array of attachment URLs/metadata
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -137,6 +140,32 @@ export const purchaseRequestItems = pgTable(
 
 export type InsertPurchaseRequestItem = typeof purchaseRequestItems.$inferInsert
 export type SelectPurchaseRequestItem = typeof purchaseRequestItems.$inferSelect
+
+// Purchase Request Approvals table
+export const purchaseRequestApprovals = pgTable(
+  "purchase_request_approvals",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    purchaseRequestId: uuid("purchase_request_id")
+      .notNull()
+      .references(() => purchaseRequests.id, { onDelete: "cascade" }),
+    approverId: uuid("approver_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: varchar("status", { length: 20 }).default("pending"), // 'pending', 'approved', 'rejected'
+    comments: text("comments"),
+    approvedAt: timestamp("approved_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    purchaseRequestIdIdx: uniqueIndex("pr_approval_pr_id_idx").on(
+      table.purchaseRequestId
+    ),
+  })
+)
+
+export type InsertPurchaseRequestApproval = typeof purchaseRequestApprovals.$inferInsert
+export type SelectPurchaseRequestApproval = typeof purchaseRequestApprovals.$inferSelect
 
 // Audit Logs table
 export const auditLogs = pgTable(

@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { createPRDraft, submitPRForApproval } from "@/actions/purchase-request-submit.actions"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -125,13 +126,39 @@ export default function CreateRequestPage() {
   }
 
   const handleSaveDraft = async () => {
+    if (!formData.title || !formData.budget) {
+      toast.error("Missing required fields", {
+        description: "Title and budget are required.",
+      })
+      return
+    }
+
     setIsSaving(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      toast.success("Draft saved", {
-        description: "Your request has been saved as a draft.",
+      const result = await createPRDraft({
+        title: formData.title,
+        description: formData.justification,
+        priority: formData.priority as any,
+        estimatedTotal: formData.budget,
+        department: formData.department,
+        items: [
+          {
+            itemName: formData.title,
+            quantity: "1",
+            unitPrice: formData.budget,
+          },
+        ],
       })
+
+      if (result.success) {
+        toast.success("Draft saved", {
+          description: `Request ${result.requestNumber} saved as draft.`,
+        })
+      } else {
+        toast.error("Failed to save", {
+          description: result.error,
+        })
+      }
     } finally {
       setIsSaving(false)
     }
@@ -147,12 +174,42 @@ export default function CreateRequestPage() {
 
     setIsSubmitting(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1200))
-      toast.success("Request submitted", {
-        description: "Your purchase request has been submitted for approval.",
+      // First create draft
+      const draftResult = await createPRDraft({
+        title: formData.title,
+        description: formData.justification,
+        priority: formData.priority as any,
+        estimatedTotal: formData.budget,
+        department: formData.department,
+        items: [
+          {
+            itemName: formData.title,
+            quantity: "1",
+            unitPrice: formData.budget,
+          },
+        ],
       })
-      router.push("/requests")
+
+      if (!draftResult.success || !draftResult.requestId) {
+        toast.error("Failed to create request", {
+          description: draftResult.error || "Failed to create purchase request",
+        })
+        return
+      }
+
+      // Then submit for approval
+      const submitResult = await submitPRForApproval(draftResult.requestId)
+
+      if (submitResult.success) {
+        toast.success("Request submitted", {
+          description: `${draftResult.requestNumber} submitted with ${submitResult.approverCount} approvers.`,
+        })
+        router.push("/requests")
+      } else {
+        toast.error("Failed to submit", {
+          description: submitResult.error,
+        })
+      }
     } finally {
       setIsSubmitting(false)
     }
