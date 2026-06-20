@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useUser } from "@clerk/nextjs"
+import { useAuth } from "@clerk/nextjs"
 import {
   LayoutDashboard,
   FileText,
@@ -18,7 +18,6 @@ import {
   DollarSign,
   ClipboardList,
 } from "lucide-react"
-import { useEffect, useState } from "react"
 
 import {
   Sidebar,
@@ -36,34 +35,37 @@ import {
 import { cn } from "@/lib/utils"
 
 const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: any }>> = {
-  REQUESTER: [
-    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "My Requests", href: "/department", icon: PlusCircle },
-    { title: "Request History", href: "/requests", icon: FileText },
-  ],
-  PROCUREMENT_MANAGER: [
+  "org:approver": [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
     { title: "All Requests", href: "/requests", icon: FileText },
     { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
     { title: "Vendors", href: "/vendors", icon: Building2 },
   ],
-  FINANCE_OFFICER: [
+  admin: [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
-    { title: "Finance Analytics", href: "/finance", icon: BarChart3 },
-    { title: "Purchase Orders", href: "/orders", icon: ScrollText },
-  ],
-  PROCUREMENT_TEAM: [
-    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "Procurement", href: "/procurement", icon: ClipboardList },
-    { title: "Quote Comparison", href: "/compare", icon: GitCompareArrows },
+    { title: "All Requests", href: "/requests", icon: FileText },
+    { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
     { title: "Vendors", href: "/vendors", icon: Building2 },
+    { title: "Finance Analytics", href: "/finance", icon: BarChart3 },
   ],
-  VENDOR: [
+  buyer: [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "RFQs", href: "/rfq", icon: FileSpreadsheet },
-    { title: "My Quotes", href: "/quotes", icon: DollarSign },
+    { title: "My Requests", href: "/department", icon: PlusCircle },
+    { title: "Request History", href: "/requests", icon: FileText },
+  ],
+  requester: [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "My Requests", href: "/department", icon: PlusCircle },
+    { title: "Request History", href: "/requests", icon: FileText },
+  ],
+  procurement_manager: [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
+    { title: "All Requests", href: "/requests", icon: FileText },
+    { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
+    { title: "Vendors", href: "/vendors", icon: Building2 },
   ],
 }
 
@@ -71,16 +73,9 @@ const aiNav = [{ title: "Procurement Copilot", href: "/copilot", icon: Sparkles 
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { user } = useUser()
-  const [userRole, setUserRole] = useState<string | null>(null)
+  const { orgRole } = useAuth()
 
-  useEffect(() => {
-    if (user?.publicMetadata?.role) {
-      setUserRole(user.publicMetadata.role as string)
-    }
-  }, [user])
-
-  const navItems = userRole && roleBasedNav[userRole] ? roleBasedNav[userRole] : []
+  const navItems = orgRole && roleBasedNav[orgRole] ? roleBasedNav[orgRole] : []
 
   return (
     <Sidebar collapsible="icon">
