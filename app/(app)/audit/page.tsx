@@ -16,10 +16,8 @@ interface AuditLogEntry {
   action: string
   entityType: string
   entityId: string
-  userName: string
-  userEmail: string
-  oldValues?: any
-  newValues?: any
+  userName: string | null
+  userEmail: string | null
   metadata?: any
   createdAt: Date
 }
@@ -52,9 +50,7 @@ export default function AuditPage() {
 
   useEffect(() => {
     const loadLogs = async () => {
-      if (!orgId) return
-
-      const result = await getAuditLogs(orgId, 100)
+      const result = await getAuditLogs(100)
       if (result.success && result.data) {
         setLogs(result.data as AuditLogEntry[])
       } else {
@@ -64,7 +60,7 @@ export default function AuditPage() {
     }
 
     loadLogs()
-  }, [orgId])
+  }, [])
 
   const formatDate = (date: Date | string) => {
     const d = new Date(date)

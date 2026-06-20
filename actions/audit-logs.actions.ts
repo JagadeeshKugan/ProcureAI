@@ -2,8 +2,9 @@
 
 import { getDb, schema } from "@/db"
 import { eq, desc } from "drizzle-orm"
+import { auth } from "@clerk/nextjs/server"
 
-export async function getAuditLogs(organizationId: string, limit: number = 50) {
+export async function getAuditLogs(limit: number = 50) {
   try {
     const db = getDb()
 
@@ -15,14 +16,11 @@ export async function getAuditLogs(organizationId: string, limit: number = 50) {
         entityId: schema.auditLogs.entityId,
         userName: schema.users.name,
         userEmail: schema.users.email,
-        oldValues: schema.auditLogs.oldValues,
-        newValues: schema.auditLogs.newValues,
         metadata: schema.auditLogs.metadata,
         createdAt: schema.auditLogs.createdAt,
       })
       .from(schema.auditLogs)
-      .leftJoin(schema.users, eq(schema.auditLogs.userId, schema.users.id))
-      .where(eq(schema.auditLogs.organizationId, organizationId))
+      .leftJoin(schema.users, eq(schema.auditLogs.performedBy, schema.users.id))
       .orderBy(desc(schema.auditLogs.createdAt))
       .limit(limit)
 
@@ -34,26 +32,33 @@ export async function getAuditLogs(organizationId: string, limit: number = 50) {
 }
 
 export async function createAuditLog(
-  organizationId: string,
-  userId: string,
   action: string,
   entityType: string,
   entityId: string,
-  oldValues?: any,
-  newValues?: any,
   metadata?: any
 ) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
     const db = getDb()
 
+    // Get the app user ID from Clerk ID
+    const appUser = await db.query.users.findFirst({
+      where: eq(schema.users.clerkId, userId),
+    })
+
+    if (!appUser) {
+      return { success: false, error: "User not found in database" }
+    }
+
     await db.insert(schema.auditLogs).values({
-      organizationId,
-      userId,
       action,
       entityType,
       entityId,
-      oldValues,
-      newValues,
+      performedBy: appUser.id,
       metadata,
     })
 
