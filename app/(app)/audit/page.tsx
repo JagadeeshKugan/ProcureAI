@@ -81,7 +81,6 @@ export default function AuditPage() {
       <PageHeader
         title="Audit Logs"
         description="Track all system activities and changes"
-        icon={FileText}
       />
 
       <div className="grid gap-4 md:grid-cols-3">
