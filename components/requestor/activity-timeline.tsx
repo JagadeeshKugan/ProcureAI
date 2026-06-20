@@ -54,7 +54,7 @@ export function ActivityTimeline({ logs }: ActivityTimelineProps) {
         <div className="space-y-4">
           {logs.map((log) => (
             <div key={log.id} className="flex gap-4">
-              <div className="flex-shrink-0 mt-1">
+              <div className="shrink-0 mt-1">
                 {actionIcons[log.action] || <Clock className="size-4" />}
               </div>
               <div className="flex-1 min-w-0">
