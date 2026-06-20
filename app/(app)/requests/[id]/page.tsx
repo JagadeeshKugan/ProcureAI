@@ -161,7 +161,7 @@ export default function RequestDetailPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
-        <Card className={`p-4 border-l-4 ${priorityColors[request.priority]}`}>
+        <Card className={`p-4 border-l-4 ${priorityColors[request.priority!]}`}>
           <div className="text-sm font-medium text-muted-foreground">Priority</div>
           <div className="mt-2 text-lg font-bold capitalize">{request.priority}</div>
         </Card>
@@ -178,7 +178,7 @@ export default function RequestDetailPage() {
         <Card className="p-4">
           <div className="text-sm font-medium text-muted-foreground">Amount</div>
           <div className="mt-2 text-lg font-bold">
-            {request.currency} {parseFloat(request.estimatedTotal).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            {request.currency} {parseFloat(request.estimatedTotal!).toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </div>
         </Card>
 
@@ -226,7 +226,7 @@ export default function RequestDetailPage() {
               )}
               <div>
                 <span className="text-muted-foreground">Approved At:</span>
-                <div className="font-medium">{formatDate(financeApproval.approvedAt)}</div>
+                <div className="font-medium">{formatDate(financeApproval.approvedAt ?? "-")}</div>
               </div>
             </div>
           </Card>
@@ -286,7 +286,7 @@ export default function RequestDetailPage() {
                   <div className="absolute left-4 top-12 w-0.5 h-8 bg-border" />
                 )}
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 mt-1">
+                  <div className="shrink-0 mt-1">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                       {getActionIcon(log.action)}
                     </div>
