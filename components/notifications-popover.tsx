@@ -92,7 +92,7 @@ export function NotificationsPopover() {
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger render={
         <Button
           variant="ghost"
           size="icon"
@@ -108,8 +108,7 @@ export function NotificationsPopover() {
               {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
           )}
-        </Button>
-      </PopoverTrigger>
+        </Button>}/>
       <PopoverContent className="w-80 p-0">
         <div className="flex items-center justify-between p-4">
           <h2 className="font-semibold">Notifications</h2>
