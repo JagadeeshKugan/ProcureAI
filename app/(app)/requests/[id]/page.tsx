@@ -117,10 +117,10 @@ export default function RequestDetailPage() {
 
       const result = await getRequestDetails(requestId, orgId)
       if (result.success) {
-        setRequest(result.request)
-        setFinanceApproval(result.financeApproval)
-        setPO(result.purchaseOrder)
-        setAuditLogs(result.auditLogs)
+        setRequest(result.request ?? null)
+        setFinanceApproval(result.financeApproval ?? null)
+        setPO(result.purchaseOrder ?? null)
+        setAuditLogs(result.auditLogs ?? [])
       } else {
         toast.error("Failed to load request details")
       }
@@ -157,7 +157,7 @@ export default function RequestDetailPage() {
         <PageHeader
           title={request.requestNumber}
           description={request.title}
-          icon={FileText}
+
         />
       </div>
 
