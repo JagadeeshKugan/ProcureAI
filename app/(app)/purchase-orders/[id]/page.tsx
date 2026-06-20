@@ -58,7 +58,7 @@ export default function PODetailPage() {
   const [poDetails, setPODetails] = useState<PODetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [updatingStatus, setUpdatingStatus] = useState(false)
-  const [newStatus, setNewStatus] = useState<string>("")
+  const [newStatus, setNewStatus] = useState<string|null>("")
 
   // Check authorization
   if (orgRole !== "org:procurement_manager" && orgRole !== "org:admin") {
@@ -131,7 +131,6 @@ export default function PODetailPage() {
         <PageHeader
           title={poDetails.po.poNumber}
           description={`Status: ${poDetails.po.status}`}
-          icon={FileText}
         />
       </div>
 
@@ -139,7 +138,12 @@ export default function PODetailPage() {
         <Card className="p-4">
           <div className="text-sm font-medium text-muted-foreground">Status</div>
           <div className="mt-3">
-            <Select value={newStatus} onValueChange={handleStatusChange} disabled={updatingStatus}>
+            <Select value={newStatus} onValueChange={
+              (value) => {
+    if (value) {
+      handleStatusChange(value)
+    }
+              }} disabled={updatingStatus}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>

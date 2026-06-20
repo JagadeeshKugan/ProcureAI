@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react"
 import { useAuth } from "@clerk/nextjs"
 import { redirect } from "next/navigation"
-import { Check, X, DollarSign } from "lucide-react"
+import { Check, X, } from "lucide-react"
 import { getFinancePendingApprovals, approveFinanceRequest } from "@/actions/finance.actions"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
@@ -256,7 +256,6 @@ export default function FinancePage() {
       <PageHeader
         title="Finance & Budget"
         description="Manage budget approvals and financial oversight"
-        icon={DollarSign}
       />
 
       <TabsList className="grid w-full grid-cols-2">

@@ -76,7 +76,6 @@ export default function PurchaseOrdersPage() {
         <PageHeader
           title="Purchase Orders"
           description="Manage and track purchase orders"
-          icon={FileText}
         />
         <Link href="/purchase-orders/create">
           <Button>
