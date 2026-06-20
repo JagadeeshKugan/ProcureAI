@@ -59,6 +59,7 @@ export class PurchaseRequestService {
 
       // Create audit log
       await this.auditRepository.create({
+        organizationId,
         entityType: "purchase_request",
         entityId: purchaseRequest.id,
         action: "create",
@@ -112,6 +113,7 @@ export class PurchaseRequestService {
 
       // Create audit log
       await this.auditRepository.create({
+        organizationId,
         entityType: "purchase_request",
         entityId: requestId,
         action: `update_status`,
