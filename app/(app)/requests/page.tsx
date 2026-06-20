@@ -99,24 +99,25 @@ export default function RequestsPage() {
   }, [])
 
   // Convert DB requests to mock format for display
-  const allRequests = React.useMemo(() => {
-    const converted = dbRequests.map((r) => ({
+  const allRequests = React.useMemo((): (PurchaseRequest & { approvalRoute?: string[] })[] => {
+    const converted: (PurchaseRequest & { approvalRoute?: string[] })[] = dbRequests.map((r) => ({
       id: r.id,
       title: r.title,
       requester: "System User",
       department: r.department || "Engineering",
       budget: Number(r.estimatedTotal) || 0,
-      status: r.status === "draft" ? "Draft" : r.status === "pending_approval" ? "Pending Approval" : r.status === "approved" ? "Approved" : "In RFQ",
+      status: (r.status === "draft" ? "Draft" : r.status === "pending_approval" ? "Pending Approval" : r.status === "approved" ? "Approved" : "In RFQ") as PurchaseRequest["status"],
       category: "Equipment",
       createdDate: r.createdAt,
       requiredDate: new Date(),
       businessNeed: "",
       attachments: [],
-      approvalRoute: r.approvalRoute ? JSON.parse(r.approvalRoute) : [],
+      approvalRoute: r.approvalRoute ? (JSON.parse(r.approvalRoute) as string[]) : undefined,
     }))
 
-    // Combine with mock data, sorted by newest first
-    return [...converted, ...purchaseRequests].sort(
+    // Add approval route to mock data and combine, sorted by newest first
+    const withApprovals = purchaseRequests.map(pr => ({ ...pr, approvalRoute: undefined as string[] | undefined }))
+    return [...converted, ...withApprovals].sort(
       (a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
     )
   }, [dbRequests])

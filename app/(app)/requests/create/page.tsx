@@ -190,9 +190,9 @@ export default function CreateRequestPage() {
         ],
       })
 
-      if (!draftResult.success) {
+      if (!draftResult.success || !draftResult.requestId) {
         toast.error("Failed to create request", {
-          description: draftResult.error,
+          description: draftResult.error || "Failed to create purchase request",
         })
         return
       }
