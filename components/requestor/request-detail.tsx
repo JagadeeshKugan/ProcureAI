@@ -13,8 +13,7 @@ interface RequestDetail {
   description?: string
   status: string
   priority: string
-  estimatedBudget: number
-  department: string
+  estimatedTotal: number
   createdAt: Date
   updatedAt: Date
 }
@@ -66,14 +65,10 @@ export function RequestDetail({ request, onBack }: RequestDetailProps) {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Details Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">Department</p>
-              <p className="font-medium mt-1">{request.department}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Estimated Budget</p>
-              <p className="font-medium mt-1">{formatCurrency(request.estimatedBudget)}</p>
+              <p className="text-xs text-muted-foreground">Estimated Total</p>
+              <p className="font-medium mt-1">{formatCurrency(Number(request.estimatedTotal))}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Created</p>

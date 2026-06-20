@@ -20,7 +20,7 @@ interface CreateRequestFormProps {
     title: string
     description: string
     quantity: number
-    estimatedBudget: number
+    unitPrice: number
     priority: string
   }) => Promise<void>
   isLoading?: boolean
@@ -32,14 +32,14 @@ export function CreateRequestForm({ onSubmit, isLoading = false }: CreateRequest
     title: "",
     description: "",
     quantity: 1,
-    estimatedBudget: 0,
+    unitPrice: 0,
     priority: "medium",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     await onSubmit(formData)
-    setFormData({ title: "", description: "", quantity: 1, estimatedBudget: 0, priority: "medium" })
+    setFormData({ title: "", description: "", quantity: 1, unitPrice: 0, priority: "medium" })
     setOpen(false)
   }
 
@@ -101,14 +101,14 @@ export function CreateRequestForm({ onSubmit, isLoading = false }: CreateRequest
             </div>
 
             <div>
-              <Label htmlFor="budget">Estimated Cost ($) *</Label>
+              <Label htmlFor="unitPrice">Unit Price ($) *</Label>
               <Input
-                id="budget"
+                id="unitPrice"
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.estimatedBudget}
-                onChange={(e) => setFormData({ ...formData, estimatedBudget: parseFloat(e.target.value) })}
+                value={formData.unitPrice}
+                onChange={(e) => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) })}
                 required
                 disabled={isLoading}
               />

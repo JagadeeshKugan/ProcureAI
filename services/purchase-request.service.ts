@@ -5,10 +5,15 @@ import type { InsertPurchaseRequest } from "@/db/schema"
 export interface CreatePurchaseRequestInput {
   title: string
   description?: string
-  department: string
   priority: string
-  estimatedBudget: number // in cents
+  currency?: string
+  organizationId: string
   requestedBy: string
+  items: Array<{
+    itemName: string
+    quantity: number
+    estimatedUnitPrice?: number
+  }>
 }
 
 export interface PurchaseRequestResponse {
@@ -29,14 +34,22 @@ export class PurchaseRequestService {
       const year = new Date().getFullYear()
       const requestNumber = await this.prRepository.getNextRequestNumber(year)
 
+      // Calculate estimated total
+      let estimatedTotal = 0
+      input.items.forEach((item) => {
+        const itemTotal = (item.estimatedUnitPrice || 0) * item.quantity
+        estimatedTotal += itemTotal
+      })
+
       // Prepare data
       const prData: InsertPurchaseRequest = {
         requestNumber,
         title: input.title,
         description: input.description,
-        department: input.department,
         priority: input.priority,
-        estimatedBudget: input.estimatedBudget,
+        currency: input.currency || "USD",
+        organizationId: input.organizationId,
+        estimatedTotal: estimatedTotal.toString(),
         status: "draft",
         requestedBy: input.requestedBy,
       }
@@ -52,8 +65,8 @@ export class PurchaseRequestService {
         performedBy: input.requestedBy,
         metadata: {
           title: input.title,
-          department: input.department,
-          budget: input.estimatedBudget,
+          itemCount: input.items.length,
+          estimatedTotal,
         },
       })
 

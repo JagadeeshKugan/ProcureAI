@@ -1,6 +1,9 @@
-import { eq, desc, and, like } from "drizzle-orm"
+import { eq, desc, and, like, sql } from "drizzle-orm"
 import { getDb, schema } from "@/db"
-import type { InsertPurchaseRequest } from "@/db/schema"
+import type {
+  InsertPurchaseRequest,
+  InsertPurchaseRequestItem,
+} from "@/db/schema"
 
 export class PurchaseRequestRepository {
   private db = getDb()
@@ -12,6 +15,15 @@ export class PurchaseRequestRepository {
       .returning()
 
     return result[0]
+  }
+
+  async createItems(items: InsertPurchaseRequestItem[]) {
+    if (items.length === 0) return []
+    const result = await this.db
+      .insert(schema.purchaseRequestItems)
+      .values(items)
+      .returning()
+    return result
   }
 
   async findById(id: string) {
@@ -30,6 +42,33 @@ export class PurchaseRequestRepository {
       .where(eq(schema.purchaseRequests.requestNumber, requestNumber))
 
     return result[0] || null
+  }
+
+  async findByOrganization(organizationId: string, limit: number = 50, offset: number = 0) {
+    return await this.db
+      .select()
+      .from(schema.purchaseRequests)
+      .where(eq(schema.purchaseRequests.organizationId, organizationId))
+      .orderBy(desc(schema.purchaseRequests.createdAt))
+      .limit(limit)
+      .offset(offset)
+  }
+
+  async findItemsByRequestId(requestId: string) {
+    const result = await this.db
+      .select()
+      .from(schema.purchaseRequestItems)
+      .where(eq(schema.purchaseRequestItems.purchaseRequestId, requestId))
+      .orderBy(schema.purchaseRequestItems.lineNumber)
+    return result
+  }
+
+  async countByOrganization(organizationId: string) {
+    const result = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(schema.purchaseRequests)
+      .where(eq(schema.purchaseRequests.organizationId, organizationId))
+    return (result[0]?.count as number) || 0
   }
 
   async findByRequestedBy(userId: string) {
