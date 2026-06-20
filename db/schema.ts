@@ -298,3 +298,89 @@ export const notifications = pgTable(
 export type InsertNotification = typeof notifications.$inferInsert
 export type SelectNotification = typeof notifications.$inferSelect
 
+// Finance Approvals table
+export const financeApprovals = pgTable(
+  "finance_approvals",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => purchaseRequests.id, { onDelete: "cascade" }),
+    approvedBy: uuid("approved_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    budgetCode: varchar("budget_code", { length: 50 }),
+    costCenter: varchar("cost_center", { length: 50 }),
+    budgetAvailable: numeric("budget_available", { precision: 12, scale: 2 }),
+    financeComments: text("finance_comments"),
+    status: varchar("status", { length: 20 }).default("PENDING"), // 'PENDING', 'APPROVED', 'REJECTED'
+    approvedAt: timestamp("approved_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    requestIdIdx: uniqueIndex("finance_approval_request_idx").on(table.requestId),
+    organizationIdIdx: uniqueIndex("finance_approval_org_idx").on(table.organizationId),
+  })
+)
+
+export type InsertFinanceApproval = typeof financeApprovals.$inferInsert
+export type SelectFinanceApproval = typeof financeApprovals.$inferSelect
+
+// Purchase Orders table
+export const purchaseOrders = pgTable(
+  "purchase_orders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => purchaseRequests.id, { onDelete: "cascade" }),
+    vendorId: uuid("vendor_id").references(() => vendors.id, { onDelete: "restrict" }),
+    poNumber: varchar("po_number", { length: 50 }).unique().notNull(),
+    status: varchar("status", { length: 20 }).default("DRAFT"), // 'DRAFT', 'ISSUED', 'DELIVERED', 'COMPLETED', 'CANCELLED'
+    totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).default("0"),
+    currency: varchar("currency", { length: 3 }).default("USD"),
+    expectedDelivery: timestamp("expected_delivery"),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    issuedAt: timestamp("issued_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    poNumberIdx: uniqueIndex("po_number_idx").on(table.poNumber),
+    requestIdIdx: uniqueIndex("po_request_idx").on(table.requestId),
+    organizationIdIdx: uniqueIndex("po_org_idx").on(table.organizationId),
+  })
+)
+
+export type InsertPurchaseOrder = typeof purchaseOrders.$inferInsert
+export type SelectPurchaseOrder = typeof purchaseOrders.$inferSelect
+
+// Purchase Order Items table
+export const purchaseOrderItems = pgTable(
+  "purchase_order_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    purchaseOrderId: uuid("purchase_order_id")
+      .notNull()
+      .references(() => purchaseOrders.id, { onDelete: "cascade" }),
+    lineNumber: integer("line_number").notNull(),
+    itemName: varchar("item_name", { length: 255 }).notNull(),
+    description: text("description"),
+    quantity: varchar("quantity", { length: 50 }).notNull(),
+    unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
+    totalPrice: numeric("total_price", { precision: 12, scale: 2 }).notNull(),
+  }
+)
+
+export type InsertPurchaseOrderItem = typeof purchaseOrderItems.$inferInsert
+export type SelectPurchaseOrderItem = typeof purchaseOrderItems.$inferSelect
+
+
+
