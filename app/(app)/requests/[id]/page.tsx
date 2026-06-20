@@ -31,10 +31,10 @@ interface RequestDetail {
 
 interface FinanceApproval {
   id: string
-  organizationId: string
+  organizationId: string | null
   requestId: string
-  approvedBy: string
-  status: string
+  approvedBy: string | null
+  status: string | null
   budgetCode: string | null
   costCenter: string | null
   budgetAvailable: string | null
@@ -48,8 +48,8 @@ interface PurchaseOrder {
   organizationId: string
   requestId: string
   vendorId: string | null
-  poNumber: string
-  status: string
+  poNumber: string | null
+  status: string | null
   totalAmount: string | null
   currency: string | null
   expectedDelivery: Date | null
@@ -260,14 +260,14 @@ export default function RequestDetailPage() {
               </div>
               <div>
                 <span className="text-muted-foreground">Status:</span>
-                <Badge className={`mt-1 ${statusColors[po.status.toLowerCase()] || "bg-gray-100 text-gray-800"}`}>
+                <Badge className={`mt-1 ${statusColors[po.status!.toLowerCase()] || "bg-gray-100 text-gray-800"}`}>
                   {po.status}
                 </Badge>
               </div>
               <div>
                 <span className="text-muted-foreground">Total Amount:</span>
                 <div className="font-bold">
-                  {request.currency} {parseFloat(po.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  {request.currency} {parseFloat(po.totalAmount!).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </div>
               </div>
               <div>
