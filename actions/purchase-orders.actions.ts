@@ -142,7 +142,7 @@ export async function getPurchaseOrdersByOrganization(organizationId: string) {
         poNumber: schema.purchaseOrders.poNumber,
         requestNumber: schema.purchaseRequests.requestNumber,
         requestTitle: schema.purchaseRequests.title,
-        vendorName: schema.vendors.name,
+        vendorName: schema.users.name,
         totalAmount: schema.purchaseOrders.totalAmount,
         currency: schema.purchaseOrders.currency,
         status: schema.purchaseOrders.status,
@@ -154,7 +154,7 @@ export async function getPurchaseOrdersByOrganization(organizationId: string) {
         schema.purchaseRequests,
         eq(schema.purchaseOrders.requestId, schema.purchaseRequests.id)
       )
-      .leftJoin(schema.vendors, eq(schema.purchaseOrders.vendorId, schema.vendors.id))
+      .leftJoin(schema.users, eq(schema.purchaseOrders.vendorId, schema.users.id))
       .where(eq(schema.purchaseOrders.organizationId, organizationId))
       .orderBy(schema.purchaseOrders.createdAt)
 
