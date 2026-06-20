@@ -42,7 +42,7 @@ const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: an
     { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
     { title: "Vendors", href: "/vendors", icon: Building2 },
   ],
-  admin: [
+  'org:admin': [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
     { title: "All Requests", href: "/requests", icon: FileText },
@@ -50,17 +50,17 @@ const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: an
     { title: "Vendors", href: "/vendors", icon: Building2 },
     { title: "Finance Analytics", href: "/finance", icon: BarChart3 },
   ],
-  buyer: [
+  'org:buyer': [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "My Requests", href: "/department", icon: PlusCircle },
     { title: "Request History", href: "/requests", icon: FileText },
   ],
-  requester: [
+  'org:requester': [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "My Requests", href: "/department", icon: PlusCircle },
     { title: "Request History", href: "/requests", icon: FileText },
   ],
-  procurement_manager: [
+  'org:procurement_manager': [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
     { title: "All Requests", href: "/requests", icon: FileText },
@@ -78,19 +78,9 @@ export function AppSidebar() {
   sessionId,
   orgId,
   orgRole,
-  orgSlug,
-  isLoaded,
   isSignedIn,
 } = useAuth()
- console.log({
-  userId,
-  sessionId,
-  orgId,
-  orgRole,
-  orgSlug,
-  isLoaded,
-  isSignedIn,
-})
+
   
   const navItems = orgRole && roleBasedNav[orgRole] ? roleBasedNav[orgRole] : []
 
