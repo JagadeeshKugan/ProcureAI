@@ -111,7 +111,7 @@ export async function submitRequestForApproval(requestId: string) {
 
       // Create audit log
       await tx.insert(schema.auditLogs).values({
-        organizationId: user.organizationId,
+        organizationId: user.organizationId!,
         entityType: "purchase_request",
         entityId: requestId,
         action: "submit",
@@ -262,6 +262,7 @@ export async function approveRequest(
 
       // Create audit log
       await tx.insert(schema.auditLogs).values({
+        organizationId: user.organizationId!,
         entityType: "purchase_request",
         entityId: requestId,
         action: "approve",
@@ -388,6 +389,7 @@ export async function rejectRequest(
 
       // Create audit log
       await tx.insert(schema.auditLogs).values({
+        organizationId: user.organizationId!,
         entityType: "purchase_request",
         entityId: requestId,
         action: "reject",

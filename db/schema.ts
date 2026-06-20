@@ -344,7 +344,7 @@ export const purchaseOrders = pgTable(
     requestId: uuid("request_id")
       .notNull()
       .references(() => purchaseRequests.id, { onDelete: "cascade" }),
-    vendorId: uuid("vendor_id").references(() => vendors.id, { onDelete: "restrict" }),
+    vendorId: uuid("vendor_id").references(() => users.id, { onDelete: "set null" }),
     poNumber: varchar("po_number", { length: 50 }).unique().notNull(),
     status: varchar("status", { length: 20 }).default("DRAFT"), // 'DRAFT', 'ISSUED', 'DELIVERED', 'COMPLETED', 'CANCELLED'
     totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).default("0"),
