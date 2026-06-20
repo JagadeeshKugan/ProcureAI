@@ -97,7 +97,8 @@ export class PurchaseRequestService {
   async updatePurchaseRequestStatus(
     requestId: string,
     newStatus: string,
-    performedBy: string
+    performedBy: string,
+    organizationId:string
   ): Promise<PurchaseRequestResponse> {
     try {
       const updated = await this.prRepository.update(requestId, {
