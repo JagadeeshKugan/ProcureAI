@@ -73,8 +73,25 @@ const aiNav = [{ title: "Procurement Copilot", href: "/copilot", icon: Sparkles 
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { orgRole } = useAuth()
-
+  const {
+  userId,
+  sessionId,
+  orgId,
+  orgRole,
+  orgSlug,
+  isLoaded,
+  isSignedIn,
+} = useAuth()
+ console.log({
+  userId,
+  sessionId,
+  orgId,
+  orgRole,
+  orgSlug,
+  isLoaded,
+  isSignedIn,
+})
+  
   const navItems = orgRole && roleBasedNav[orgRole] ? roleBasedNav[orgRole] : []
 
   return (
