@@ -213,8 +213,9 @@ export function Topbar() {
 
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
-              <Button variant="ghost" className="h-9 gap-2 px-1.5">
+            render={(props) => (
+    <Button
+      {...props}variant="ghost" className="h-9 gap-2 px-1.5">
                 <Avatar className="size-7">
                   <AvatarFallback className="bg-primary text-xs text-primary-foreground">
                     {user?.firstName?.charAt(0) || "U"}
@@ -227,8 +228,9 @@ export function Topbar() {
                     : user?.emailAddresses[0]?.emailAddress || "User"}
                 </span>
               </Button>
-            }
-          />
+  )}
+          >
+            </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
