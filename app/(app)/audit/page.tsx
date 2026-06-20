@@ -13,6 +13,7 @@ import { toast } from "sonner"
 
 interface AuditLogEntry {
   id: string
+  organizationId: string
   action: string
   entityType: string
   entityId: string
@@ -50,7 +51,9 @@ export default function AuditPage() {
 
   useEffect(() => {
     const loadLogs = async () => {
-      const result = await getAuditLogs(100)
+      if (!orgId) return
+
+      const result = await getAuditLogs(orgId, 100)
       if (result.success && result.data) {
         setLogs(result.data as AuditLogEntry[])
       } else {
@@ -60,7 +63,7 @@ export default function AuditPage() {
     }
 
     loadLogs()
-  }, [])
+  }, [orgId])
 
   const formatDate = (date: Date | string) => {
     const d = new Date(date)
@@ -149,11 +152,11 @@ export default function AuditPage() {
                     </TableCell>
                     <TableCell className="font-mono text-xs">{log.entityId.substring(0, 8)}...</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {log.newValues ? (
+                      {log.metadata ? (
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           <span>
-                            {log.newValues.status ? `Status: ${log.newValues.status}` : JSON.stringify(log.newValues).substring(0, 50)}
+                            {log.metadata.status ? `Status: ${log.metadata.status}` : log.metadata.comments ? log.metadata.comments.substring(0, 50) : JSON.stringify(log.metadata).substring(0, 50)}
                           </span>
                         </div>
                       ) : (

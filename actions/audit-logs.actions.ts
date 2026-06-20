@@ -4,13 +4,14 @@ import { getDb, schema } from "@/db"
 import { eq, desc } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
 
-export async function getAuditLogs(limit: number = 50) {
+export async function getAuditLogs(organizationId: string, limit: number = 50) {
   try {
     const db = getDb()
 
     const logs = await db
       .select({
         id: schema.auditLogs.id,
+        organizationId: schema.auditLogs.organizationId,
         action: schema.auditLogs.action,
         entityType: schema.auditLogs.entityType,
         entityId: schema.auditLogs.entityId,
@@ -21,6 +22,7 @@ export async function getAuditLogs(limit: number = 50) {
       })
       .from(schema.auditLogs)
       .leftJoin(schema.users, eq(schema.auditLogs.performedBy, schema.users.id))
+      .where(eq(schema.auditLogs.organizationId, organizationId))
       .orderBy(desc(schema.auditLogs.createdAt))
       .limit(limit)
 
@@ -32,6 +34,7 @@ export async function getAuditLogs(limit: number = 50) {
 }
 
 export async function createAuditLog(
+  organizationId: string,
   action: string,
   entityType: string,
   entityId: string,
@@ -59,6 +62,7 @@ export async function createAuditLog(
     const appUserId = users[0].id
 
     await db.insert(schema.auditLogs).values({
+      organizationId,
       action,
       entityType,
       entityId,

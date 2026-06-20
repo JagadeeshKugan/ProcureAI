@@ -174,13 +174,16 @@ export const auditLogs = pgTable(
   "audit_logs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    entityType: varchar("entity_type", { length: 50 }).notNull(), // 'purchase_request', 'user', etc.
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    entityType: varchar("entity_type", { length: 50 }).notNull(), // 'purchase_request', 'finance_approval', 'user', etc.
     entityId: uuid("entity_id").notNull(),
-    action: varchar("action", { length: 50 }).notNull(), // 'create', 'update', 'delete', 'approve', 'reject'
+    action: varchar("action", { length: 50 }).notNull(), // 'create', 'update', 'delete', 'approve', 'reject', 'FINANCE_APPROVED'
     performedBy: uuid("performed_by")
       .notNull()
       .references(() => users.id, { onDelete: "set null" }),
-    metadata: jsonb("metadata"), // Additional context about the action
+    metadata: jsonb("metadata"), // Additional context about the action, includes oldValues, newValues, comments
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
@@ -188,6 +191,7 @@ export const auditLogs = pgTable(
       table.entityType,
       table.entityId
     ),
+    organizationIdIdx: uniqueIndex("audit_org_idx").on(table.organizationId),
   })
 )
 
