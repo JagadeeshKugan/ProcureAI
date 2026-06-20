@@ -21,15 +21,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 import {
   Popover,
   PopoverContent,
@@ -210,58 +202,77 @@ export function Topbar() {
           <Sun className="size-4 dark:hidden" />
           <Moon className="hidden size-4 dark:block" />
         </Button>
+              <Popover>
+  <PopoverTrigger
+    render={(props) => (
+      <Button
+        {...props}
+        variant="ghost"
+        className="h-9 gap-2 px-1.5"
+      >
+        <Avatar className="size-7">
+          <AvatarFallback className="bg-primary text-xs text-primary-foreground">
+            {user?.firstName?.charAt(0) || "U"}
+            {user?.lastName?.charAt(0) || ""}
+          </AvatarFallback>
+        </Avatar>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={(props) => (
-    <Button
-      {...props}variant="ghost" className="h-9 gap-2 px-1.5">
-                <Avatar className="size-7">
-                  <AvatarFallback className="bg-primary text-xs text-primary-foreground">
-                    {user?.firstName?.charAt(0) || "U"}
-                    {user?.lastName?.charAt(0) || ""}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden text-sm font-medium lg:inline">
-                  {user?.firstName && user?.lastName
-                    ? `${user.firstName} ${user.lastName}`
-                    : user?.emailAddresses[0]?.emailAddress || "User"}
-                </span>
-              </Button>
-  )}
-          >
-            </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">
-                  {user?.firstName && user?.lastName
-                    ? `${user.firstName} ${user.lastName}`
-                    : user?.emailAddresses[0]?.emailAddress || "User"}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {(user?.unsafeMetadata?.role as string) || "buyer"}
-                </span>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push("/profile")}>
-                <User />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings />
-                Settings
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setLogoutOpen(true)}>
-              <LogOut />
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <span className="hidden text-sm font-medium lg:inline">
+          {user?.firstName && user?.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user?.emailAddresses?.[0]?.emailAddress || "User"}
+        </span>
+      </Button>
+    )}
+  />
+
+  <PopoverContent
+    side="bottom"
+    align="end"
+    className="w-56 p-0"
+  >
+    <div className="border-b p-3">
+      <div className="text-sm font-medium">
+        {user?.firstName && user?.lastName
+          ? `${user.firstName} ${user.lastName}`
+          : user?.emailAddresses?.[0]?.emailAddress || "User"}
+      </div>
+
+      <div className="text-xs text-muted-foreground">
+        {(user?.unsafeMetadata?.role as string) || "buyer"}
+      </div>
+    </div>
+
+    <div className="p-1">
+      <Button
+        variant="ghost"
+        className="w-full justify-start"
+        onClick={() => router.push("/profile")}
+      >
+        <User className="mr-2 h-4 w-4" />
+        Profile
+      </Button>
+
+      <Button
+        variant="ghost"
+        className="w-full justify-start"
+      >
+        <Settings className="mr-2 h-4 w-4" />
+        Settings
+      </Button>
+
+      <Button
+        variant="ghost"
+        className="w-full justify-start text-destructive"
+        onClick={() => setLogoutOpen(true)}
+      >
+        <LogOut className="mr-2 h-4 w-4" />
+        Sign out
+      </Button>
+    </div>
+  </PopoverContent>
+</Popover>
+       
       </div>
 
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
