@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { CommandPalette } from "@/components/command-palette"
 import { NotificationsPopover } from "@/components/notifications-popover"
+import { useCurrentAppUser } from "@/lib/hooks/use-current-app-user"
 import { syncUserToDatabase } from "@/lib/auth/server"
 
 const labels: Record<string, string> = {
@@ -55,6 +56,7 @@ export function Topbar() {
   const { setTheme, resolvedTheme } = useTheme()
   const { user, isLoaded } = useUser()
   const { signOut } = useClerk()
+  const { user: appUser, status: userStatus, role: userRole } = useCurrentAppUser()
   const [cmdOpen, setCmdOpen] = React.useState(false)
   const [logoutOpen, setLogoutOpen] = React.useState(false)
 
@@ -176,7 +178,7 @@ export function Topbar() {
     align="end"
     className="w-56 p-0"
   >
-    <div className="border-b p-3">
+    <div className="border-b p-3 space-y-2">
       <div className="text-sm font-medium">
         {user?.firstName && user?.lastName
           ? `${user.firstName} ${user.lastName}`
@@ -184,7 +186,27 @@ export function Topbar() {
       </div>
 
       <div className="text-xs text-muted-foreground">
-        {(user?.unsafeMetadata?.role as string) || "buyer"}
+        {user?.emailAddresses?.[0]?.emailAddress}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">
+          {userRole ? userRole.replace(/_/g, " ") : "Role"}
+        </span>
+        <Badge
+          variant="secondary"
+          className={`text-xs h-5 ${
+            userStatus === "active"
+              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+              : userStatus === "pending"
+                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
+                : userStatus === "disabled"
+                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                  : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100"
+          }`}
+        >
+          {userStatus || "pending"}
+        </Badge>
       </div>
     </div>
 

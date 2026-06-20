@@ -46,7 +46,9 @@ export const users = pgTable(
     firstName: varchar("first_name", { length: 255 }),
     lastName: varchar("last_name", { length: 255 }),
     name: varchar("name", { length: 255 }),
-    role: varchar("role", { length: 50 }).default("employee"), // 'employee', 'vendor', 'admin'
+    role: varchar("role", { length: 50 }).default("requester"), // 'requester', 'procurement_manager', 'finance_officer', 'procurement_team', 'vendor', 'admin'
+    status: varchar("status", { length: 50 }).default("pending"), // 'active', 'pending', 'disabled'
+    department: varchar("department", { length: 255 }),
     companyName: varchar("company_name", { length: 255 }), // For vendors
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
