@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { CommandPalette } from "@/components/command-palette"
+import { NotificationsPopover } from "@/components/notifications-popover"
 import { syncUserToDatabase } from "@/lib/auth/server"
 
 const labels: Record<string, string> = {
@@ -47,24 +48,6 @@ const labels: Record<string, string> = {
   orders: "Purchase Orders",
   copilot: "Procurement Copilot",
 }
-
-const notifications = [
-  {
-    title: "AI recommendation ready",
-    desc: "Lenovo recommended for RFQ-2026-0142",
-    time: "12m",
-  },
-  {
-    title: "RFQ closing soon",
-    desc: "RFQ-2026-0142 closes in 2 days",
-    time: "1h",
-  },
-  {
-    title: "Approval requested",
-    desc: "Marcus Webb · Adobe Creative Cloud",
-    time: "3h",
-  },
-]
 
 export function Topbar() {
   const pathname = usePathname()
@@ -153,45 +136,7 @@ export function Topbar() {
           <Search className="size-4" />
         </Button>
 
-        <Popover>
-          <PopoverTrigger
-            render={
-              <Button variant="outline" size="icon" className="relative" aria-label="Notifications">
-                <Bell className="size-4" />
-                <span className="absolute -right-0.5 -top-0.5 flex size-2.5 items-center justify-center">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60" />
-                  <span className="relative inline-flex size-2 rounded-full bg-primary" />
-                </span>
-              </Button>
-            }
-          />
-          <PopoverContent align="end" className="w-80 p-0">
-            <div className="flex items-center justify-between border-b px-4 py-3">
-              <span className="text-sm font-semibold">Notifications</span>
-              <Badge variant="secondary">3 new</Badge>
-            </div>
-            <div className="flex flex-col">
-              {notifications.map((n) => (
-                <div
-                  key={n.title}
-                  className="flex items-start gap-3 border-b px-4 py-3 last:border-0 hover:bg-muted/50"
-                >
-                  <div className="mt-1 size-2 shrink-0 rounded-full bg-primary" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium leading-tight">{n.title}</p>
-                    <p className="text-xs text-muted-foreground">{n.desc}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{n.time}</span>
-                </div>
-              ))}
-            </div>
-            <div className="p-2">
-              <Button variant="ghost" className="w-full text-sm">
-                View all notifications
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <NotificationsPopover />
 
         <Button
           variant="outline"

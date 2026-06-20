@@ -79,7 +79,7 @@ export const purchaseRequests = pgTable(
     priority: varchar("priority", { length: 20 }).default("medium"), // 'low', 'medium', 'high', 'critical'
     estimatedTotal: numeric("estimated_total", { precision: 12, scale: 2 }).default("0"),
     currency: varchar("currency", { length: 3 }).default("USD"),
-    status: varchar("status", { length: 50 }).default("draft"), // 'draft', 'pending_approval', 'approved', 'in_rfq', 'rejected'
+    status: varchar("status", { length: 50 }).default("draft"), // 'draft', 'submitted', 'manager_approved', 'finance_approved', 'procurement_review', 'in_rfq', 'rejected'
     requestedBy: uuid("requested_by")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -244,4 +244,55 @@ export const vendorQuotes = pgTable(
 
 export type InsertVendorQuote = typeof vendorQuotes.$inferInsert
 export type SelectVendorQuote = typeof vendorQuotes.$inferSelect
+
+// Organization Members table
+export const organizationMembers = pgTable(
+  "organization_members",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 50 }).notNull(), // 'REQUESTER', 'PROCUREMENT_MANAGER', 'FINANCE_OFFICER', 'PROCUREMENT_TEAM', 'VENDOR'
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    organizationUserIdx: uniqueIndex("org_user_idx").on(
+      table.organizationId,
+      table.userId
+    ),
+  })
+)
+
+export type InsertOrganizationMember = typeof organizationMembers.$inferInsert
+export type SelectOrganizationMember = typeof organizationMembers.$inferSelect
+
+// Notifications table
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: varchar("type", { length: 50 }).notNull(), // 'approval_request', 'approval_approved', 'approval_rejected', 'request_submitted', 'request_approved'
+    title: varchar("title", { length: 255 }).notNull(),
+    message: text("message"),
+    relatedEntityType: varchar("related_entity_type", { length: 50 }), // 'purchase_request', 'approval'
+    relatedEntityId: uuid("related_entity_id"),
+    read: varchar("read", { length: 10 }).default("false"), // 'true', 'false'
+    actionUrl: text("action_url"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: uniqueIndex("notification_user_idx").on(table.userId),
+    createdAtIdx: uniqueIndex("notification_created_at_idx").on(table.createdAt),
+  })
+)
+
+export type InsertNotification = typeof notifications.$inferInsert
+export type SelectNotification = typeof notifications.$inferSelect
 
