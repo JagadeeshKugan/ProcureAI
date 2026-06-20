@@ -17,11 +17,11 @@ interface RequestDetail {
   id: string
   requestNumber: string
   title: string
-  description?: string
-  department?: string
-  priority: string
-  estimatedTotal: string
-  currency: string
+  description: string | null
+  department: string | null
+  priority: string | null
+  estimatedTotal: string | null
+  currency: string | null
   status: string
   requestedByName: string
   requestedByEmail: string
@@ -32,11 +32,11 @@ interface RequestDetail {
 interface FinanceApproval {
   id: string
   status: string
-  budgetCode?: string
-  costCenter?: string
-  budgetAvailable?: string
-  financeComments?: string
-  approvedAt?: Date
+  budgetCode: string | null
+  costCenter: string | null
+  budgetAvailable: string | null
+  financeComments: string | null
+  approvedAt: Date | null
   createdAt: Date
 }
 
@@ -52,10 +52,9 @@ interface AuditLog {
   id: string
   action: string
   entityType: string
-  userName?: string
-  userEmail?: string
-  oldValues?: any
-  newValues?: any
+  userName: string | null
+  userEmail: string | null
+  metadata: any
   createdAt: Date
 }
 
@@ -304,10 +303,10 @@ export default function RequestDetailPage() {
                         {formatDate(log.createdAt)}
                       </div>
                     </div>
-                    {log.newValues && Object.keys(log.newValues).length > 0 && (
+                    {log.metadata && Object.keys(log.metadata).length > 0 && (
                       <div className="mt-2 text-sm bg-muted p-2 rounded">
                         <div className="font-mono text-xs">
-                          {Object.entries(log.newValues)
+                          {Object.entries(log.metadata)
                             .map(([key, value]) => `${key}: ${value}`)
                             .join(" • ")}
                         </div>
