@@ -1,6 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { UserRepository } from "@/repositories/user.repository";
 
 // Public routes (NO auth required)
 const isPublicRoute = createRouteMatcher([
@@ -46,30 +45,9 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(new URL("/sign-in", req.url));
     }
 
-    // Check user status in database
-    try {
-      const userRepo = new UserRepository();
-      const appUser = await userRepo.findByClerkId(userId);
-
-      if (appUser) {
-        // Disabled users cannot access internal routes
-        if (appUser.status === "disabled" && isInternalRoute(req)) {
-          return NextResponse.redirect(new URL("/access-denied", req.url));
-        }
-
-        // Pending users can only access certain routes
-        if (appUser.status === "pending" && isInternalRoute(req)) {
-          return NextResponse.redirect(new URL("/awaiting-approval", req.url));
-        }
-      }
-    } catch (dbError) {
-      console.error("[Middleware DB Error]", dbError);
-      // Continue if DB check fails, don't block user
-    }
-
     // SAFE role extraction (never trust undefined metadata)
     const userRole =
-      (sessionClaims?.metadata as any)?.role ?? "employee";
+      (sessionClaims?.metadata as any)?.role ?? "requester";
 
     // Vendor cannot access internal routes
     if (isInternalRoute(req) && userRole === "vendor") {
