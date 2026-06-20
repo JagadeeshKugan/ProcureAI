@@ -62,12 +62,11 @@ export async function getRequestDetails(requestId: string, organizationId: strin
         entityType: schema.auditLogs.entityType,
         userName: schema.users.name,
         userEmail: schema.users.email,
-        oldValues: schema.auditLogs.oldValues,
-        newValues: schema.auditLogs.newValues,
+        metadata: schema.auditLogs.metadata,
         createdAt: schema.auditLogs.createdAt,
       })
       .from(schema.auditLogs)
-      .leftJoin(schema.users, eq(schema.auditLogs.userId, schema.users.id))
+      .leftJoin(schema.users, eq(schema.auditLogs.performedBy, schema.users.id))
       .where(
         and(
           eq(schema.auditLogs.organizationId, organizationId),
