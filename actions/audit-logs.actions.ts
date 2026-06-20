@@ -46,19 +46,23 @@ export async function createAuditLog(
     const db = getDb()
 
     // Get the app user ID from Clerk ID
-    const appUser = await db.query.users.findFirst({
-      where: eq(schema.users.clerkId, userId),
-    })
+    const users = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(eq(schema.users.clerkId, userId))
+      .limit(1)
 
-    if (!appUser) {
+    if (!users || users.length === 0) {
       return { success: false, error: "User not found in database" }
     }
+
+    const appUserId = users[0].id
 
     await db.insert(schema.auditLogs).values({
       action,
       entityType,
       entityId,
-      performedBy: appUser.id,
+      performedBy: appUserId,
       metadata,
     })
 
