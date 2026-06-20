@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server"
 import { getDb, schema } from "@/db"
 import { eq, and } from "drizzle-orm"
 import { z } from "zod"
+import { UserRepository } from "@/repositories/user.repository"
 
 // Generate PO number in format: PO-YYYY-0001
 async function generatePONumber(organizationId: string): Promise<string> {
@@ -63,6 +64,12 @@ export async function createPurchaseOrder(
     }
 
     const db = getDb()
+    const userRepo = new UserRepository()
+    const appUser = await userRepo.findByClerkId(userId)
+
+    if (!appUser) {
+      return { success: false, error: "User not found in database" }
+    }
 
     // Generate PO number
     const poNumber = await generatePONumber(organizationId)
@@ -76,8 +83,8 @@ export async function createPurchaseOrder(
     let poId: string | null = null
 
     // Create PO in transaction
-    await db.transaction(async () => {
-      const [po] = await db
+    await db.transaction(async (tx) => {
+      const [po] = await tx
         .insert(schema.purchaseOrders)
         .values({
           organizationId,
@@ -88,7 +95,7 @@ export async function createPurchaseOrder(
           totalAmount: totalAmount.toString(),
           currency: "USD",
           expectedDelivery: validation.data.expectedDelivery ? new Date(validation.data.expectedDelivery) : undefined,
-          createdBy: userId as string,
+          createdBy: appUser.id,
         })
         .returning()
 
@@ -105,16 +112,16 @@ export async function createPurchaseOrder(
         totalPrice: (parseFloat(item.unitPrice) * parseFloat(item.quantity)).toString(),
       }))
 
-      await db.insert(schema.purchaseOrderItems).values(items)
+      await tx.insert(schema.purchaseOrderItems).values(items)
 
       // Create audit log
-      await db.insert(schema.auditLogs).values({
+      await tx.insert(schema.auditLogs).values({
         organizationId,
-        userId: userId as string,
         action: "PO_CREATED",
         entityType: "purchase_order",
         entityId: po.id,
-        newValues: { poNumber, status: "DRAFT", totalAmount },
+        performedBy: appUser.id,
+        metadata: { poNumber, status: "DRAFT", totalAmount },
       })
     })
 
@@ -201,9 +208,15 @@ export async function updatePOStatus(
     }
 
     const db = getDb()
+    const userRepo = new UserRepository()
+    const appUser = await userRepo.findByClerkId(userId)
 
-    await db.transaction(async () => {
-      await db
+    if (!appUser) {
+      return { success: false, error: "User not found in database" }
+    }
+
+    await db.transaction(async (tx) => {
+      await tx
         .update(schema.purchaseOrders)
         .set({ status })
         .where(
@@ -214,13 +227,13 @@ export async function updatePOStatus(
         )
 
       // Create audit log
-      await db.insert(schema.auditLogs).values({
+      await tx.insert(schema.auditLogs).values({
         organizationId,
-        userId: userId as string,
         action: "STATUS_CHANGED",
         entityType: "purchase_order",
         entityId: poId,
-        newValues: { status },
+        performedBy: appUser.id,
+        metadata: { status },
       })
     })
 

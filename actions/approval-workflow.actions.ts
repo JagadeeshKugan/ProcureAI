@@ -111,6 +111,7 @@ export async function submitRequestForApproval(requestId: string) {
 
       // Create audit log
       await tx.insert(schema.auditLogs).values({
+        organizationId: user.organizationId,
         entityType: "purchase_request",
         entityId: requestId,
         action: "submit",

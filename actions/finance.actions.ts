@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server"
 import { getDb, schema } from "@/db"
 import { eq, and } from "drizzle-orm"
 import { z } from "zod"
+import { UserRepository } from "@/repositories/user.repository"
 
 const financeApprovalSchema = z.object({
   requestId: z.string().uuid(),
@@ -78,11 +79,17 @@ export async function approveFinanceRequest(data: z.infer<typeof financeApproval
     }
 
     const db = getDb()
+    const userRepo = new UserRepository()
+    const appUser = await userRepo.findByClerkId(userId)
+
+    if (!appUser) {
+      return { success: false, error: "User not found in database" }
+    }
 
     // Start transaction
-    await db.transaction(async () => {
+    await db.transaction(async (tx) => {
       // Update finance approval status
-      await db
+      await tx
         .update(schema.financeApprovals)
         .set({
           status: validation.data.approved ? "APPROVED" : "REJECTED",
@@ -93,7 +100,7 @@ export async function approveFinanceRequest(data: z.infer<typeof financeApproval
 
       // Update purchase request status
       if (validation.data.approved) {
-        await db
+        await tx
           .update(schema.purchaseRequests)
           .set({
             status: "finance_approved",
@@ -101,7 +108,7 @@ export async function approveFinanceRequest(data: z.infer<typeof financeApproval
           })
           .where(eq(schema.purchaseRequests.id, validation.data.requestId))
       } else {
-        await db
+        await tx
           .update(schema.purchaseRequests)
           .set({
             status: "rejected",
@@ -111,13 +118,13 @@ export async function approveFinanceRequest(data: z.infer<typeof financeApproval
       }
 
       // Create audit log
-      await db.insert(schema.auditLogs).values({
+      await tx.insert(schema.auditLogs).values({
         organizationId,
-        userId: userId as string,
         action: "FINANCE_APPROVED",
         entityType: "finance_approval",
         entityId: validation.data.requestId,
-        newValues: {
+        performedBy: appUser.id,
+        metadata: {
           status: validation.data.approved ? "APPROVED" : "REJECTED",
           comments: validation.data.financeComments,
         },
