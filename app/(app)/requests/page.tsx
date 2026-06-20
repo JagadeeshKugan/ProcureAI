@@ -108,8 +108,8 @@ export default function RequestsPage() {
       budget: Number(r.estimatedTotal) || 0,
       status: (r.status === "draft" ? "Draft" : r.status === "pending_approval" ? "Pending Approval" : r.status === "approved" ? "Approved" : "In RFQ") as PurchaseRequest["status"],
       category: "Equipment",
-      createdDate: r.createdAt,
-      requiredDate: new Date(),
+      createdDate: r.createdAt?.toLocaleDateString(),
+      requiredDate: new Date().toLocaleDateString(),
       businessNeed: "",
       attachments: [],
       approvalRoute: r.approvalRoute ? (JSON.parse(r.approvalRoute) as string[]) : undefined,
@@ -263,7 +263,7 @@ function RequestDetailsDrawer({
   onOpenChange: (open: boolean) => void
 }) {
   const approvalCount = request?.approvalRoute?.length || 0
-  
+
   return (
     <Sheet open={!!request} onOpenChange={onOpenChange}>
       <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-md">
