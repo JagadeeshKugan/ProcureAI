@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@clerk/nextjs"
-import { redirect } from "next/navigation"
-import { Check, X, } from "lucide-react"
+import { Check, X, DollarSign } from "lucide-react"
 import { getFinancePendingApprovals, approveFinanceRequest } from "@/actions/finance.actions"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
@@ -13,7 +12,7 @@ import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
-import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface FinanceApproval {
   id: string
@@ -33,7 +32,7 @@ interface FinanceApproval {
 }
 
 function FinanceApprovalsContent() {
-  const { orgId, orgRole } = useAuth()
+  const { orgId } = useAuth()
   const [approvals, setApprovals] = useState<FinanceApproval[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedApproval, setSelectedApproval] = useState<FinanceApproval | null>(null)
@@ -41,15 +40,6 @@ function FinanceApprovalsContent() {
   const [comments, setComments] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [actionType, setActionType] = useState<"approve" | "reject">("approve")
-
-  // Check authorization - only org:admin
-  if (orgRole !== "org:admin") {
-    return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-        You do not have permission to access this module. Only admins can approve finance requests.
-      </div>
-    )
-  }
 
   useEffect(() => {
     const loadApprovals = async () => {
@@ -251,19 +241,38 @@ function FinanceApprovalsContent() {
 }
 
 export default function FinancePage() {
+  const { orgRole } = useAuth()
+
+  // Check authorization - only org:admin
+  if (orgRole !== "org:admin") {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Finance & Budget"
+          description="Manage budget approvals and financial oversight"
+          icon={DollarSign}
+        />
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+          You do not have permission to access this module. Only admins can approve finance requests.
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Finance & Budget"
         description="Manage budget approvals and financial oversight"
+        icon={DollarSign}
       />
 
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="approvals">Finance Approvals</TabsTrigger>
-        <TabsTrigger value="analytics">Analytics</TabsTrigger>
-      </TabsList>
+      <Tabs defaultValue="approvals" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="approvals">Finance Approvals</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
 
-      <Suspense fallback={<div className="text-center py-8">Loading...</div>}>
         <TabsContent value="approvals" className="space-y-6">
           <FinanceApprovalsContent />
         </TabsContent>
@@ -273,7 +282,7 @@ export default function FinancePage() {
             Analytics dashboard coming soon. Finance approvals module is now active.
           </div>
         </TabsContent>
-      </Suspense>
+      </Tabs>
     </div>
   )
 }
