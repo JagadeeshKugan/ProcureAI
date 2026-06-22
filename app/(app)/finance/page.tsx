@@ -250,7 +250,6 @@ export default function FinancePage() {
         <PageHeader
           title="Finance & Budget"
           description="Manage budget approvals and financial oversight"
-          icon={DollarSign}
         />
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
           You do not have permission to access this module. Only admins can approve finance requests.
@@ -264,7 +263,6 @@ export default function FinancePage() {
       <PageHeader
         title="Finance & Budget"
         description="Manage budget approvals and financial oversight"
-        icon={DollarSign}
       />
 
       <Tabs defaultValue="approvals" className="w-full">
