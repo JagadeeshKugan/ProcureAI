@@ -213,11 +213,12 @@ export default function RequestsPage() {
             </TableHeader>
             <TableBody>
               {filtered.map((r, i) => (
-                <Link key={r.id} href={`/requests/${r.id}`}>
+                
                   <TableRow
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => setSelected(r)}
                   >
+                  <Link key={r.id} href={`/requests/${r.id}`}>
                     <TableCell className="font-mono text-xs text-muted-foreground">
                       PR-{1042 + i}
                     </TableCell>
@@ -240,8 +241,8 @@ export default function RequestsPage() {
                         year: "numeric",
                       })}
                     </TableCell>
+                    </Link>
                   </TableRow>
-                </Link>
               ))}
             </TableBody>
           </Table>
