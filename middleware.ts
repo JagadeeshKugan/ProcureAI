@@ -7,6 +7,8 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/api/health",
   "/api/webhooks/(.*)",
+  "/access-denied",
+  "/awaiting-approval",
   "/",
 ]);
 
@@ -45,7 +47,7 @@ export default clerkMiddleware(async (auth, req) => {
 
     // SAFE role extraction (never trust undefined metadata)
     const userRole =
-      (sessionClaims?.metadata as any)?.role ?? "employee";
+      (sessionClaims?.metadata as any)?.role ?? "requester";
 
     // Vendor cannot access internal routes
     if (isInternalRoute(req) && userRole === "vendor") {

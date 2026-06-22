@@ -12,6 +12,7 @@ export default function HomePage() {
     if (isLoaded) {
       if (user) {
         // Get user role from metadata
+        console.log({user})
         const userRole = user.publicMetadata?.role || "employee"
 
         // Route based on role

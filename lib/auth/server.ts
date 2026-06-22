@@ -25,8 +25,8 @@ export async function syncUserToDatabase() {
       clerkId: userId,
       email: user.emailAddresses[0]?.emailAddress || "",
       name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username || "",
-      // Extract role from Clerk publicMetadata
-      role: (user.publicMetadata?.role as string) || "employee",
+      // Role will be synced from orgRole which includes: org:approver, admin, buyer, requester, procurement_manager
+      role: "requester", // Default role, will be updated via useAuth().orgRole in components
     };
 
     // Check if user exists

@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useAuth } from "@clerk/nextjs"
 import {
   LayoutDashboard,
   FileText,
@@ -13,6 +14,11 @@ import {
   Boxes,
   BarChart3,
   PlusCircle,
+  CheckCircle2,
+  DollarSign,
+  ClipboardList,
+  ShoppingCart,
+  History,
 } from "lucide-react"
 
 import {
@@ -30,21 +36,58 @@ import {
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 
-const mainNav = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { title: "My Requests", href: "/department", icon: PlusCircle },
-  { title: "Purchase Requests", href: "/requests", icon: FileText },
-  { title: "Vendors", href: "/vendors", icon: Building2 },
-  { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
-  { title: "Quote Comparison", href: "/compare", icon: GitCompareArrows },
-  { title: "Purchase Orders", href: "/orders", icon: ScrollText },
-  { title: "Finance Analytics", href: "/finance", icon: BarChart3 },
-]
+const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: any }>> = {
+  "org:approver": [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
+    { title: "All Requests", href: "/requests", icon: FileText },
+    { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
+    { title: "Vendors", href: "/vendors", icon: Building2 },
+  ],
+  'org:admin': [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
+    { title: "All Requests", href: "/requests", icon: FileText },
+    { title: "Finance", href: "/finance", icon: DollarSign },
+    { title: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart },
+    { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
+    { title: "Vendors", href: "/vendors", icon: Building2 },
+    { title: "Audit Logs", href: "/audit", icon: History },
+  ],
+  'org:buyer': [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "My Requests", href: "/department", icon: PlusCircle },
+    { title: "Request History", href: "/requests", icon: FileText },
+  ],
+  'org:requester': [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "My Requests", href: "/department", icon: PlusCircle },
+    { title: "Request History", href: "/requests", icon: FileText },
+  ],
+  'org:procurement_manager': [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
+    { title: "All Requests", href: "/requests", icon: FileText },
+    { title: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart },
+    { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
+    { title: "Vendors", href: "/vendors", icon: Building2 },
+  ],
+}
 
 const aiNav = [{ title: "Procurement Copilot", href: "/copilot", icon: Sparkles }]
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const {
+  userId,
+  sessionId,
+  orgId,
+  orgRole,
+  isSignedIn,
+} = useAuth()
+
+  
+  const navItems = orgRole && roleBasedNav[orgRole] ? roleBasedNav[orgRole] : []
 
   return (
     <Sidebar collapsible="icon">
@@ -63,10 +106,10 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Procurement</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNav.map((item) => {
+              {navItems.map((item) => {
                 const active =
                   pathname === item.href || pathname.startsWith(item.href + "/")
                 return (

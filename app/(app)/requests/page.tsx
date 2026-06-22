@@ -213,34 +213,35 @@ export default function RequestsPage() {
             </TableHeader>
             <TableBody>
               {filtered.map((r, i) => (
-                <TableRow
-                  key={r.id}
-                  className="cursor-pointer"
-                  onClick={() => setSelected(r)}
-                >
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    PR-{1042 + i}
-                  </TableCell>
-                  <TableCell className="max-w-[280px] font-medium">
-                    <span className="block truncate">{r.title}</span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {r.department}
-                  </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">
-                    {formatCurrency(r.budget)}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={r.status} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(r.createdDate).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </TableCell>
-                </TableRow>
+                <Link key={r.id} href={`/requests/${r.id}`}>
+                  <TableRow
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => setSelected(r)}
+                  >
+                    <TableCell className="font-mono text-xs text-muted-foreground">
+                      PR-{1042 + i}
+                    </TableCell>
+                    <TableCell className="max-w-[280px] font-medium">
+                      <span className="block truncate">{r.title}</span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {r.department}
+                    </TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {formatCurrency(r.budget)}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={r.status} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(r.createdDate).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </TableCell>
+                  </TableRow>
+                </Link>
               ))}
             </TableBody>
           </Table>

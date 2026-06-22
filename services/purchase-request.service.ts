@@ -59,6 +59,7 @@ export class PurchaseRequestService {
 
       // Create audit log
       await this.auditRepository.create({
+        organizationId: input.organizationId,
         entityType: "purchase_request",
         entityId: purchaseRequest.id,
         action: "create",
@@ -96,7 +97,8 @@ export class PurchaseRequestService {
   async updatePurchaseRequestStatus(
     requestId: string,
     newStatus: string,
-    performedBy: string
+    performedBy: string,
+    organizationId:string
   ): Promise<PurchaseRequestResponse> {
     try {
       const updated = await this.prRepository.update(requestId, {
@@ -112,6 +114,7 @@ export class PurchaseRequestService {
 
       // Create audit log
       await this.auditRepository.create({
+        organizationId,
         entityType: "purchase_request",
         entityId: requestId,
         action: `update_status`,
