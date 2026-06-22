@@ -81,8 +81,9 @@ export function Topbar() {
 
   const handleLogout = async () => {
     setLogoutOpen(false)
-    await signOut()
-    router.push("/sign-in")
+    await signOut({
+      redirectUrl: "/sign-in",
+    })
   }
 
   const segments = pathname.split("/").filter(Boolean)
@@ -148,89 +149,89 @@ export function Topbar() {
           <Sun className="size-4 dark:hidden" />
           <Moon className="hidden size-4 dark:block" />
         </Button>
-              <Popover>
-  <PopoverTrigger
-    render={(props) => (
-      <Button
-        {...props}
-        variant="ghost"
-        className="h-9 gap-2 px-1.5"
-      >
-        <Avatar className="size-7">
-          <AvatarFallback className="bg-primary text-xs text-primary-foreground">
-            {user?.firstName?.charAt(0) || "U"}
-            {user?.lastName?.charAt(0) || ""}
-          </AvatarFallback>
-        </Avatar>
+        <Popover>
+          <PopoverTrigger
+            render={(props) => (
+              <Button
+                {...props}
+                variant="ghost"
+                className="h-9 gap-2 px-1.5"
+              >
+                <Avatar className="size-7">
+                  <AvatarFallback className="bg-primary text-xs text-primary-foreground">
+                    {user?.firstName?.charAt(0) || "U"}
+                    {user?.lastName?.charAt(0) || ""}
+                  </AvatarFallback>
+                </Avatar>
 
-        <span className="hidden text-sm font-medium lg:inline">
-          {user?.firstName && user?.lastName
-            ? `${user.firstName} ${user.lastName}`
-            : user?.emailAddresses?.[0]?.emailAddress || "User"}
-        </span>
-      </Button>
-    )}
-  />
+                <span className="hidden text-sm font-medium lg:inline">
+                  {user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.emailAddresses?.[0]?.emailAddress || "User"}
+                </span>
+              </Button>
+            )}
+          />
 
-  <PopoverContent
-    side="bottom"
-    align="end"
-    className="w-56 p-0"
-  >
-    <div className="border-b p-3 space-y-2">
-      <div className="text-sm font-medium">
-        {user?.firstName && user?.lastName
-          ? `${user.firstName} ${user.lastName}`
-          : user?.emailAddresses?.[0]?.emailAddress || "User"}
-      </div>
+          <PopoverContent
+            side="bottom"
+            align="end"
+            className="w-56 p-0"
+          >
+            <div className="border-b p-3 space-y-2">
+              <div className="text-sm font-medium">
+                {user?.firstName && user?.lastName
+                  ? `${user.firstName} ${user.lastName}`
+                  : user?.emailAddresses?.[0]?.emailAddress || "User"}
+              </div>
 
-      <div className="text-xs text-muted-foreground">
-        {user?.emailAddresses?.[0]?.emailAddress}
-      </div>
+              <div className="text-xs text-muted-foreground">
+                {user?.emailAddresses?.[0]?.emailAddress}
+              </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">
-          {orgRole ? orgRole.replace(/_/g, " ").replace("org:", "") : "Role"}
-        </span>
-        <Badge
-          variant="secondary"
-          className="text-xs h-5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
-        >
-          {orgRole ? orgRole.replace(/_/g, " ").replace("org:", "") : "User"}
-        </Badge>
-      </div>
-    </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {orgRole ? orgRole.replace(/_/g, " ").replace("org:", "") : "Role"}
+                </span>
+                <Badge
+                  variant="secondary"
+                  className="text-xs h-5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
+                >
+                  {orgRole ? orgRole.replace(/_/g, " ").replace("org:", "") : "User"}
+                </Badge>
+              </div>
+            </div>
 
-    <div className="p-1">
-      <Button
-        variant="ghost"
-        className="w-full justify-start"
-        onClick={() => router.push("/profile")}
-      >
-        <User className="mr-2 h-4 w-4" />
-        Profile
-      </Button>
+            <div className="p-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => router.push("/profile")}
+              >
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </Button>
 
-      <Button
-        variant="ghost"
-        className="w-full justify-start"
-      >
-        <Settings className="mr-2 h-4 w-4" />
-        Settings
-      </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
 
-      <Button
-        variant="ghost"
-        className="w-full justify-start text-destructive"
-        onClick={() => setLogoutOpen(true)}
-      >
-        <LogOut className="mr-2 h-4 w-4" />
-        Sign out
-      </Button>
-    </div>
-  </PopoverContent>
-</Popover>
-       
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-destructive"
+                onClick={() => setLogoutOpen(true)}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
       </div>
 
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />

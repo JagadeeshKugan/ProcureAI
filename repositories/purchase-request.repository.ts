@@ -140,5 +140,100 @@ export class PurchaseRequestRepository {
     )
     return `PR-${year}-${String(lastNumber + 1).padStart(4, "0")}`
   }
+
+  async getApprovalRoute(
+    organizationId: string,
+    estimatedTotal: number,
+    department: string
+  ): Promise<string[]> {
+    // Get organization members by role
+    const deptManager = await this.db
+      .select()
+      .from(schema.organizationMembers)
+      .where(
+        and(
+          eq(schema.organizationMembers.organizationId, organizationId),
+          eq(schema.organizationMembers.role, "department_manager")
+        )
+      )
+      .limit(1)
+
+    const financeTeam = await this.db
+      .select()
+      .from(schema.organizationMembers)
+      .where(
+        and(
+          eq(schema.organizationMembers.organizationId, organizationId),
+          eq(schema.organizationMembers.role, "finance")
+        )
+      )
+      .limit(1)
+
+    const procurementTeam = await this.db
+      .select()
+      .from(schema.organizationMembers)
+      .where(
+        and(
+          eq(schema.organizationMembers.organizationId, organizationId),
+          eq(schema.organizationMembers.role, "procurement")
+        )
+      )
+      .limit(1)
+
+    const approvalRoute: string[] = []
+
+    // Add department manager
+    if (deptManager.length > 0) {
+      approvalRoute.push(deptManager[0].userId)
+    }
+
+    // Add finance team if amount > 50000
+    if (estimatedTotal > 50000 && financeTeam.length > 0) {
+      approvalRoute.push(financeTeam[0].userId)
+    }
+
+    // Add procurement team
+    if (procurementTeam.length > 0) {
+      approvalRoute.push(procurementTeam[0].userId)
+    }
+
+    return approvalRoute
+  }
+
+  async createWithItems(
+    request: InsertPurchaseRequest,
+    items: InsertPurchaseRequestItem[]
+  ) {
+    let purchaseRequest: any
+    let insertedItems: any[] = []
+
+    await this.db.transaction(async (tx) => {
+      // Insert purchase request
+      const prResult = await tx
+        .insert(schema.purchaseRequests)
+        .values(request)
+        .returning()
+
+      purchaseRequest = prResult[0]
+
+      // Insert items if provided
+      if (items.length > 0) {
+        const itemsWithRequestId = items.map((item) => ({
+          ...item,
+          purchaseRequestId: purchaseRequest.id,
+        }))
+
+        insertedItems = await tx
+          .insert(schema.purchaseRequestItems)
+          .values(itemsWithRequestId)
+          .returning()
+      }
+    })
+
+    return {
+      purchaseRequest,
+      items: insertedItems,
+    }
+  }
 }
 
