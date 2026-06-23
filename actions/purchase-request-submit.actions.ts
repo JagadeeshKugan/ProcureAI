@@ -51,7 +51,8 @@ function generateApprovalRoute(amount: number): string[] {
  */
 export async function createPRDraft(input: CreatePRInput) {
   try {
-    const { userId } = await auth()
+    const { userId } = await auth();
+    
     if (!userId) {
       return { success: false, error: "Not authenticated" }
     }

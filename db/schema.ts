@@ -160,8 +160,9 @@ export const purchaseRequestApprovals = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    purchaseRequestIdIdx: uniqueIndex("pr_approval_pr_id_idx").on(
-      table.purchaseRequestId
+    prApprovalUniqueIdx: uniqueIndex("pr_approval_unique_idx").on(
+      table.purchaseRequestId,
+      table.approverId
     ),
   })
 )
