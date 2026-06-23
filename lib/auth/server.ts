@@ -3,6 +3,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getDb, schema } from "@/db";
 import { eq } from "drizzle-orm";
+import { useAuth } from "@clerk/nextjs";
 
 /**
  * Sync user from Clerk to PostgreSQL database
@@ -13,20 +14,30 @@ export async function syncUserToDatabase() {
   try {
     const { userId } = await auth();
     const user = await currentUser();
-
+    const { orgId, orgRole } = useAuth();
     if (!userId || !user) {
       throw new Error("User not authenticated");
     }
 
     const db = getDb();
-
+    const mapRoleToAppRole = (role?: string | null): string => {
+      const roleMap: { [key: string]: string } = {
+        "org:admin": "admin",
+        "org:requester": "requester",
+        "org:procurement_manager": "procurement_manager",
+        "org:approver": "approver"
+      }
+      return roleMap[role!] || "member"
+    }
     // Prepare user data from Clerk
     const userData = {
       clerkId: userId,
       email: user.emailAddresses[0]?.emailAddress || "",
       name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username || "",
+      organization_id:orgId,
+      role: mapRoleToAppRole(orgRole),
       // Role will be synced from orgRole which includes: org:approver, admin, buyer, requester, procurement_manager
-      role: "requester", // Default role, will be updated via useAuth().orgRole in components
+      
     };
 
     // Check if user exists
