@@ -3,7 +3,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getDb, schema } from "@/db";
 import { eq } from "drizzle-orm";
-import { useAuth } from "@clerk/nextjs";
 
 /**
  * Sync user from Clerk to PostgreSQL database
@@ -12,9 +11,9 @@ import { useAuth } from "@clerk/nextjs";
  */
 export async function syncUserToDatabase() {
   try {
-    const { userId } = await auth();
+    const authSession = await auth();
+    const { userId, orgId, orgRole } = authSession;
     const user = await currentUser();
-    const { orgId, orgRole } = useAuth();
     if (!userId || !user) {
       throw new Error("User not authenticated");
     }
@@ -34,10 +33,11 @@ export async function syncUserToDatabase() {
       clerkId: userId,
       email: user.emailAddresses[0]?.emailAddress || "",
       name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username || "",
-      organization_id:orgId,
+      organizationId: orgId || null,
+      firstName: user.firstName || null,
+      lastName: user.lastName || null,
       role: mapRoleToAppRole(orgRole),
-      // Role will be synced from orgRole which includes: org:approver, admin, buyer, requester, procurement_manager
-      
+      status: "active",
     };
 
     // Check if user exists
@@ -55,6 +55,8 @@ export async function syncUserToDatabase() {
           email: userData.email,
           name: userData.name,
           role: userData.role,
+          organizationId: userData.organizationId,
+          status: userData.status,
           updatedAt: new Date(),
         })
         .where(eq(schema.users.clerkId, userId))
