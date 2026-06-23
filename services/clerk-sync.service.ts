@@ -11,12 +11,14 @@ export interface ClerkSyncInput {
   lastName?: string
   clerkOrgId?: string
   orgName?: string
+  orgRole?: string // 'org:admin', 'org:member', etc.
 }
 
 export interface SyncResult {
   success: boolean
   userId?: string
   organizationId?: string
+  data?: { user: any; organization?: any }
   error?: string
 }
 
@@ -68,6 +70,20 @@ export class ClerkSyncService {
           .join(" ")
           .trim()
 
+        // Map Clerk organization role to app role
+        const mapRoleToAppRole = (clerkRole: string): string => {
+          const roleMap: { [key: string]: string } = {
+            "org:admin": "admin",
+            "org:member": "requester",
+            "org:manager": "procurement_manager",
+          }
+          return roleMap[clerkRole] || "requester"
+        }
+
+        const userRole = input.orgRole
+          ? mapRoleToAppRole(input.orgRole)
+          : "requester"
+
         const userData: InsertUser = {
           clerkId: input.clerkUserId,
           organizationId: organizationId,
@@ -75,8 +91,15 @@ export class ClerkSyncService {
           firstName: input.firstName,
           lastName: input.lastName,
           name: fullName || input.email,
-          role: "employee", // Default role
+          role: userRole, // Use mapped role from orgRole
+          status: "active", // Set status to active on successful sync
         }
+
+        console.log("[ClerkSyncService] Creating/updating user with role:", {
+          clerkId: input.clerkUserId,
+          orgRole: input.orgRole,
+          mappedRole: userRole,
+        })
 
         const user = await this.userRepository.upsertByClerkId(
           input.clerkUserId,
@@ -97,6 +120,12 @@ export class ClerkSyncService {
         success: true,
         userId: result.userId,
         organizationId: result.organizationId,
+        data: {
+          user: {
+            id: result.userId,
+            organizationId: result.organizationId,
+          },
+        },
       }
     } catch (error) {
       console.error("[ClerkSyncService] Error syncing user and organization:", error)

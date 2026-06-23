@@ -8,6 +8,7 @@ const syncService = new ClerkSyncService()
 /**
  * Server action to sync the current authenticated Clerk user and organization
  * This should be called once during user authentication flow
+ * Stores organizationId and userRole in the database on successful login
  */
 export async function syncClerkUserToDatabase() {
   try {
@@ -31,6 +32,7 @@ export async function syncClerkUserToDatabase() {
     // Get organization if available
     const clerkOrgId = authSession.orgId
     const orgName = authSession.orgSlug || "Default Organization"
+    const orgRole = authSession.orgRole as string | undefined
 
     if (!email) {
       return {
@@ -38,6 +40,13 @@ export async function syncClerkUserToDatabase() {
         error: "Email not found in Clerk session",
       }
     }
+
+    console.log("[syncClerkUserToDatabase] Syncing user with org context", {
+      clerkUserId,
+      email,
+      clerkOrgId,
+      orgRole,
+    })
 
     // Sync user and organization
     const result = await syncService.syncUserAndOrganization({
@@ -47,6 +56,12 @@ export async function syncClerkUserToDatabase() {
       lastName,
       clerkOrgId: clerkOrgId || undefined,
       orgName: clerkOrgId ? orgName : undefined,
+      orgRole: orgRole || undefined,
+    })
+
+    console.log("[syncClerkUserToDatabase] Sync result:", {
+      success: result.success,
+      hasUser: !!result.data?.user,
     })
 
     return result
