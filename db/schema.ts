@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   foreignKey,
   numeric,
+  index,
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
@@ -96,10 +97,10 @@ export const purchaseRequests = pgTable(
   },
   (table) => ({
     requestNumberIdx: uniqueIndex("request_number_idx").on(table.requestNumber),
-    organizationIdIdx: uniqueIndex("org_id_idx").on(table.organizationId),
-    requestedByIdx: uniqueIndex("requested_by_idx").on(table.requestedBy),
-    statusIdx: uniqueIndex("status_idx").on(table.status),
-    createdAtIdx: uniqueIndex("created_at_idx").on(table.createdAt),
+    organizationIdIdx: index("org_id_idx").on(table.organizationId),
+    requestedByIdx: index("requested_by_idx").on(table.requestedBy),
+    statusIdx: index("status_idx").on(table.status),
+    createdAtIdx: index("created_at_idx").on(table.createdAt),
   })
 )
 
