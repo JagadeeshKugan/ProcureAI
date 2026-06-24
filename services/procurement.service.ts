@@ -15,7 +15,7 @@ export interface ProcurementResponse<T = any> {
 
 export class ProcurementService {
   private procurementRepo: ProcurementRepository
-  private auditRepo: AuditRepository
+  private auditRepo: AuditLogRepository
   private userRepo: UserRepository
   private requestRepo: PurchaseRequestRepository
 
