@@ -388,5 +388,66 @@ export const purchaseOrderItems = pgTable(
 export type InsertPurchaseOrderItem = typeof purchaseOrderItems.$inferInsert
 export type SelectPurchaseOrderItem = typeof purchaseOrderItems.$inferSelect
 
+// Procurement Assignments table - Tracks which procurement manager owns each approved request
+export const procurementAssignments = pgTable(
+  "procurement_assignments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => purchaseRequests.id, { onDelete: "cascade" }),
+    assignedTo: uuid("assigned_to")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    status: varchar("status", { length: 20 }).default("OPEN"), // 'OPEN', 'IN_PROGRESS', 'COMPLETED'
+    assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    requestIdIdx: index("pa_request_idx").on(table.requestId),
+    assignedToIdx: index("pa_assigned_to_idx").on(table.assignedTo),
+    organizationIdIdx: index("pa_org_idx").on(table.organizationId),
+  })
+)
+
+export type InsertProcurementAssignment = typeof procurementAssignments.$inferInsert
+export type SelectProcurementAssignment = typeof procurementAssignments.$inferSelect
+
+// Vendor Selections table - Tracks which vendor was selected for each request
+export const vendorSelections = pgTable(
+  "vendor_selections",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => purchaseRequests.id, { onDelete: "cascade" }),
+    rfqId: uuid("rfq_id").references(() => rfqs.id, { onDelete: "set null" }),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    selectedBy: uuid("selected_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    selectionReason: text("selection_reason"),
+    aiScore: numeric("ai_score", { precision: 5, scale: 2 }), // Score from 0-100
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    requestIdUniqueIdx: uniqueIndex("vs_request_unique_idx").on(table.requestId),
+    rfqIdIdx: index("vs_rfq_idx").on(table.rfqId),
+    vendorIdIdx: index("vs_vendor_idx").on(table.vendorId),
+    organizationIdIdx: index("vs_org_idx").on(table.organizationId),
+  })
+)
+
+export type InsertVendorSelection = typeof vendorSelections.$inferInsert
+export type SelectVendorSelection = typeof vendorSelections.$inferSelect
 
 
