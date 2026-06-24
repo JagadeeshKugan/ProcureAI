@@ -38,24 +38,43 @@ export default clerkMiddleware(async (auth, req) => {
     }
 
     // ✅ IMPORTANT: Must await auth()
-    const { userId, sessionClaims } = await auth();
+    const { userId, orgRole } = await auth();
 
     // Not logged in → redirect safely
     if (!userId) {
       return NextResponse.redirect(new URL("/sign-in", req.url));
     }
 
-    // SAFE role extraction (never trust undefined metadata)
-    const userRole =
-      (sessionClaims?.metadata as any)?.role ?? "requester";
+    // Map Clerk org role to app role
+    const mapRoleToAppRole = (role?: string | null): string => {
+      const roleMap: { [key: string]: string } = {
+        "org:admin": "admin",
+        "org:requester": "requester",
+        "org:procurement_manager": "procurement_manager",
+        "org:approver": "approver",
+        "org:vendor": "vendor",
+        "org:buyer": "buyer",
+      }
+      return roleMap[role!] || "member"
+    }
+
+    const userRole = mapRoleToAppRole(orgRole)
+
+    console.log("[Middleware] User role mapping:", {
+      orgRole,
+      mappedRole: userRole,
+      path: req.nextUrl.pathname,
+    })
 
     // Vendor cannot access internal routes
     if (isInternalRoute(req) && userRole === "vendor") {
+      console.log("[Middleware] Redirecting vendor from internal route to /vendor/dashboard")
       return NextResponse.redirect(new URL("/vendor/dashboard", req.url));
     }
 
     // Non-vendor cannot access vendor routes
     if (isVendorRoute(req) && userRole !== "vendor") {
+      console.log("[Middleware] Redirecting non-vendor from vendor route to /dashboard")
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
