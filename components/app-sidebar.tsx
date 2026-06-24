@@ -36,6 +36,21 @@ import {
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 
+/**
+ * Map Clerk organization roles to app roles
+ */
+function mapRoleToAppRole(role?: string | null): string {
+  const roleMap: { [key: string]: string } = {
+    "org:admin": "admin",
+    "org:requester": "requester",
+    "org:procurement_manager": "procurement_manager",
+    "org:approver": "approver",
+    "org:vendor": "vendor",
+    "org:buyer": "buyer",
+  }
+  return roleMap[role!] || "member"
+}
+
 const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: any }>> = {
   "org:approver": [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -71,6 +86,11 @@ const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: an
     { title: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart },
     { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
     { title: "Vendors", href: "/vendors", icon: Building2 },
+  ],
+  'org:vendor': [
+    { title: "Dashboard", href: "/vendor/dashboard", icon: LayoutDashboard },
+    { title: "Quotations", href: "/vendor/quotations", icon: FileSpreadsheet },
+    { title: "My Orders", href: "/vendor/orders", icon: ShoppingCart },
   ],
 }
 
