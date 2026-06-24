@@ -43,16 +43,11 @@ export async function getProcurementDashboard(organizationId: string) {
       return approvedRequests
     }
 
-    // Get active RFQs
+    // Get active RFQs - filter by status only, organization context comes through purchase requests
     const rfqs = await db
       .select()
       .from(schema.rfqs)
-      .where(
-        and(
-          eq(schema.rfqs.organizationId, organizationId),
-          eq(schema.rfqs.status, "active")
-        )
-      )
+      .where(eq(schema.rfqs.status, "sent"))
 
     // Get vendor selections with vendor info
     const vendorSelections = await db
@@ -292,7 +287,6 @@ export async function createRFQFromRequest(
     const rfqCount = await db
       .select()
       .from(schema.rfqs)
-      .where(eq(schema.rfqs.organizationId, organizationId))
 
     const rfqNumber = `RFQ-${new Date().getFullYear()}-${String(rfqCount.length + 1).padStart(4, "0")}`
 
@@ -300,13 +294,11 @@ export async function createRFQFromRequest(
     const rfq = await db
       .insert(schema.rfqs)
       .values({
-        organizationId,
         rfqNumber,
         title: request[0].title,
         description: request[0].description,
-        requestId,
-        status: "active",
-        createdBy: userId,
+        purchaseRequestId: requestId,
+        status: "sent",
       })
       .returning()
 
