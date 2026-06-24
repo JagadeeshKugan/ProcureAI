@@ -26,8 +26,8 @@ export async function syncClerkUserToDatabase() {
     // Get user details from Clerk
     const clerkUserId = authSession.userId
     const email = clerkUser?.emailAddresses[0]?.emailAddress
-    const firstName = clerkUser?.firstName
-    const lastName = clerkUser?.lastName
+    const firstName = clerkUser?.firstName ?? ''
+    const lastName = clerkUser?.lastName ?? ''
 
     // Get organization if available
     const clerkOrgId = authSession.orgId
