@@ -1,5 +1,5 @@
 import { ProcurementRepository } from "@/repositories/procurement.repository"
-import { AuditRepository } from "@/repositories/audit.repository"
+import { AuditLogRepository } from "@/repositories/audit-log.repository"
 import { UserRepository } from "@/repositories/user.repository"
 import { PurchaseRequestRepository } from "@/repositories/purchase-request.repository"
 import {
@@ -21,7 +21,7 @@ export class ProcurementService {
 
   constructor() {
     this.procurementRepo = new ProcurementRepository()
-    this.auditRepo = new AuditRepository()
+    this.auditRepo = new AuditLogRepository()
     this.userRepo = new UserRepository()
     this.requestRepo = new PurchaseRequestRepository()
   }
