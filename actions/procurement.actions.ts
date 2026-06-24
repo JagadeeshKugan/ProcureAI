@@ -205,3 +205,113 @@ export async function updateAssignmentStatus(
     }
   }
 }
+
+/**
+ * Bulk assign approved requests to procurement managers
+ */
+export async function bulkAssignRequests(
+  organizationId: string,
+  requestIds: string[],
+  assignedTo: string
+) {
+  try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const procurementService = new ProcurementService()
+    const results = []
+
+    for (const requestId of requestIds) {
+      const result = await procurementService.assignRequestToProcurement(
+        requestId,
+        organizationId,
+        assignedTo,
+        userId
+      )
+      results.push(result)
+    }
+
+    const successful = results.filter((r) => r.success).length
+    const failed = results.filter((r) => !r.success).length
+
+    console.log(
+      "[bulkAssignRequests] Bulk assignment completed:",
+      { successful, failed }
+    )
+
+    return {
+      success: failed === 0,
+      data: { successful, failed, results },
+      error: failed > 0 ? `${failed} requests failed to assign` : undefined,
+    }
+  } catch (error) {
+    console.error("[bulkAssignRequests] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to bulk assign requests",
+    }
+  }
+}
+
+/**
+ * Get procurement queue for a specific user
+ */
+export async function getProcurementQueue(organizationId: string) {
+  try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const db = getDb()
+
+    // Get assignments for the current user with request details
+    const assignments = await db
+      .select({
+        assignmentId: schema.procurementAssignments.id,
+        assignmentStatus: schema.procurementAssignments.status,
+        assignedAt: schema.procurementAssignments.assignedAt,
+        requestId: schema.purchaseRequests.id,
+        requestNumber: schema.purchaseRequests.requestNumber,
+        title: schema.purchaseRequests.title,
+        department: schema.purchaseRequests.department,
+        estimatedTotal: schema.purchaseRequests.estimatedTotal,
+        currency: schema.purchaseRequests.currency,
+        priority: schema.purchaseRequests.priority,
+        requestStatus: schema.purchaseRequests.status,
+      })
+      .from(schema.procurementAssignments)
+      .leftJoin(
+        schema.purchaseRequests,
+        eq(
+          schema.procurementAssignments.requestId,
+          schema.purchaseRequests.id
+        )
+      )
+      .where(
+        and(
+          eq(schema.procurementAssignments.assignedTo, userId),
+          eq(schema.procurementAssignments.organizationId, organizationId)
+        )
+      )
+
+    return {
+      success: true,
+      data: assignments,
+    }
+  } catch (error) {
+    console.error("[getProcurementQueue] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch queue",
+    }
+  }
+}
