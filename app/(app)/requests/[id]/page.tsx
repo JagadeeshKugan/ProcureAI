@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/nextjs"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, FileText, Clock, CheckCircle, AlertCircle, DollarSign, ShoppingCart } from "lucide-react"
-import { getRequestDetails } from "@/actions/request-detail.actions"
+import { getRequestDetails, getOrganizationIdFromClerk } from "@/actions/request-detail.actions"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -124,14 +124,28 @@ export default function RequestDetailPage() {
     const loadDetails = async () => {
       if (!orgId || !requestId) return
 
-      const result = await getRequestDetails(requestId, orgId)
-      if (result.success) {
-        setRequest(result.request ?? null)
-        setFinanceApproval(result.financeApproval ?? null)
-        setPO(result.purchaseOrder ?? null)
-        setAuditLogs(result.auditLogs ?? [])
-      } else {
-        toast.error("Failed to load request details")
+      try {
+        // First, get the database organization UUID from the Clerk organization ID
+        const orgIdResult = await getOrganizationIdFromClerk(orgId)
+        if (!orgIdResult.success || !orgIdResult.organizationId) {
+          toast.error("Organization not found")
+          setLoading(false)
+          return
+        }
+
+        // Now fetch request details using the database organization UUID
+        const result = await getRequestDetails(requestId, orgIdResult.organizationId)
+        if (result.success) {
+          setRequest(result.request ?? null)
+          setFinanceApproval(result.financeApproval ?? null)
+          setPO(result.purchaseOrder ?? null)
+          setAuditLogs(result.auditLogs ?? [])
+        } else {
+          toast.error("Failed to load request details")
+        }
+      } catch (error) {
+        console.error("[RequestDetail] Error loading request:", error)
+        toast.error("An error occurred while loading request details")
       }
       setLoading(false)
     }
