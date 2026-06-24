@@ -614,6 +614,173 @@ export async function issuePurchaseOrder(
 }
 
 /**
+ * Get procurement timeline for a request
+ */
+export async function getProcurementTimeline(
+  requestId: string,
+  organizationId: string
+) {
+  try {
+    const db = getDb()
+
+    // Get all audit logs related to procurement for this request
+    const timeline = await db
+      .select()
+      .from(schema.auditLogs)
+      .where(
+        and(
+          eq(schema.auditLogs.organizationId, organizationId),
+          eq(schema.auditLogs.metadata, requestId)
+        )
+      )
+      .orderBy(schema.auditLogs.createdAt)
+
+    // Get assignment history
+    const assignments = await db
+      .select()
+      .from(schema.procurementAssignments)
+      .where(eq(schema.procurementAssignments.requestId, requestId))
+
+    // Get vendor selection
+    const vendorSelection = await db
+      .select()
+      .from(schema.vendorSelections)
+      .where(eq(schema.vendorSelections.requestId, requestId))
+
+    // Get PO
+    const po = await db
+      .select()
+      .from(schema.purchaseOrders)
+      .where(eq(schema.purchaseOrders.requestId, requestId))
+
+    // Get request approval history
+    const request = await db
+      .select()
+      .from(schema.purchaseRequests)
+      .where(eq(schema.purchaseRequests.id, requestId))
+
+    // Build timeline
+    const timelineEvents: any[] = []
+
+    if (request.length) {
+      timelineEvents.push({
+        id: `req-${request[0].id}`,
+        type: "request_created",
+        title: "Purchase Request Created",
+        status: request[0].status,
+        timestamp: request[0].createdAt,
+        description: `Request: ${request[0].requestNumber}`,
+        amount: request[0].estimatedTotal,
+      })
+    }
+
+    if (assignments.length) {
+      assignments.forEach((assignment) => {
+        timelineEvents.push({
+          id: `assign-${assignment.id}`,
+          type: "assigned",
+          title: "Assigned to Procurement",
+          status: assignment.status,
+          timestamp: assignment.assignedAt,
+          description: `Assignment ID: ${assignment.id}`,
+        })
+        if (assignment.completedAt) {
+          timelineEvents.push({
+            id: `completed-${assignment.id}`,
+            type: "assignment_completed",
+            title: "Procurement Assignment Completed",
+            status: "COMPLETED",
+            timestamp: assignment.completedAt,
+            description: "Task completed",
+          })
+        }
+      })
+    }
+
+    if (vendorSelection.length) {
+      timelineEvents.push({
+        id: `vendor-${vendorSelection[0].id}`,
+        type: "vendor_selected",
+        title: "Vendor Selected",
+        status: "active",
+        timestamp: vendorSelection[0].createdAt,
+        description: `Vendor selection score: ${vendorSelection[0].aiScore || "N/A"}`,
+        metadata: {
+          reason: vendorSelection[0].selectionReason,
+          score: vendorSelection[0].aiScore,
+        },
+      })
+    }
+
+    if (po.length) {
+      timelineEvents.push({
+        id: `po-${po[0].id}`,
+        type: "po_created",
+        title: "Purchase Order Created",
+        status: po[0].status,
+        timestamp: po[0].createdAt,
+        description: `PO: ${po[0].poNumber}`,
+        amount: po[0].totalAmount,
+      })
+
+      if (po[0].issuedAt) {
+        timelineEvents.push({
+          id: `po-issued-${po[0].id}`,
+          type: "po_issued",
+          title: "Purchase Order Issued",
+          status: po[0].status,
+          timestamp: po[0].issuedAt,
+          description: `PO: ${po[0].poNumber}`,
+        })
+      }
+    }
+
+    // Sort by timestamp
+    timelineEvents.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    )
+
+    return { success: true, data: timelineEvents }
+  } catch (error) {
+    console.error("[getProcurementTimeline] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch timeline",
+    }
+  }
+}
+
+/**
+ * Get procurement audit logs
+ */
+export async function getProcurementAuditLogs(
+  requestId: string,
+  organizationId: string,
+  limit: number = 50
+) {
+  try {
+    const db = getDb()
+
+    const logs = await db
+      .select()
+      .from(schema.auditLogs)
+      .where(eq(schema.auditLogs.organizationId, organizationId))
+      .limit(limit)
+
+    return { success: true, data: logs }
+  } catch (error) {
+    console.error("[getProcurementAuditLogs] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch audit logs",
+    }
+  }
+}
+
+/**
  * Get procurement queue for a specific user
  */
 export async function getProcurementQueue(organizationId: string) {
