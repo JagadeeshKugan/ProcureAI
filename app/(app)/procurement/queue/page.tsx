@@ -157,7 +157,6 @@ export default function ProcurementQueue() {
         <PageHeader
           title="My Procurement Queue"
           description="Manage your assigned procurement tasks"
-          icon={FileText}
         />
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
@@ -174,7 +173,6 @@ export default function ProcurementQueue() {
       <PageHeader
         title="My Procurement Queue"
         description="Manage your assigned procurement tasks"
-        icon={FileText}
       />
 
       {/* Queue Stats */}
