@@ -461,6 +461,159 @@ export async function getRFQWithQuotes(rfqId: string) {
 }
 
 /**
+ * Generate purchase order from vendor selection
+ */
+export async function generatePurchaseOrder(
+  requestId: string,
+  rfqId: string | null,
+  vendorId: string,
+  organizationId: string,
+  totalAmount: string,
+  expectedDeliveryDays?: number
+) {
+  try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const db = getDb()
+
+    // Verify vendor selection exists
+    const vendorSelection = await db
+      .select()
+      .from(schema.vendorSelections)
+      .where(eq(schema.vendorSelections.requestId, requestId))
+      .limit(1)
+
+    if (!vendorSelection.length) {
+      return {
+        success: false,
+        error:
+          "Vendor must be selected before generating PO",
+      }
+    }
+
+    // Generate PO number
+    const poCount = await db
+      .select()
+      .from(schema.purchaseOrders)
+      .where(eq(schema.purchaseOrders.organizationId, organizationId))
+
+    const year = new Date().getFullYear()
+    const poNumber = `PO-${year}-${String(poCount.length + 1).padStart(4, "0")}`
+
+    // Create purchase order
+    const expectedDelivery = expectedDeliveryDays
+      ? new Date(Date.now() + expectedDeliveryDays * 24 * 60 * 60 * 1000)
+      : undefined
+
+    const po = await db
+      .insert(schema.purchaseOrders)
+      .values({
+        organizationId,
+        requestId,
+        vendorId,
+        poNumber,
+        status: "DRAFT",
+        totalAmount,
+        issuedAt: new Date(),
+        expectedDelivery,
+        createdBy: userId,
+      })
+      .returning()
+
+    // Create audit log
+    const auditRepo = new AuditLogRepository()
+    await auditRepo.create({
+      organizationId,
+      entityType: "purchase_order",
+      entityId: po[0].id,
+      action: "create",
+      performedBy: userId,
+      metadata: {
+        requestId,
+        vendorId,
+        poNumber,
+        totalAmount,
+      },
+    })
+
+    console.log("[generatePurchaseOrder] PO generated:", { poNumber })
+
+    return { success: true, data: po[0] }
+  } catch (error) {
+    console.error("[generatePurchaseOrder] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to generate PO",
+    }
+  }
+}
+
+/**
+ * Issue purchase order (change status from DRAFT to ISSUED)
+ */
+export async function issuePurchaseOrder(
+  poId: string,
+  organizationId: string
+) {
+  try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const db = getDb()
+
+    const po = await db
+      .update(schema.purchaseOrders)
+      .set({
+        status: "ISSUED",
+        issuedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(schema.purchaseOrders.id, poId),
+          eq(schema.purchaseOrders.organizationId, organizationId)
+        )
+      )
+      .returning()
+
+    if (!po.length) {
+      return { success: false, error: "Purchase order not found" }
+    }
+
+    // Create audit log
+    const auditRepo = new AuditLogRepository()
+    await auditRepo.create({
+      organizationId,
+      entityType: "purchase_order",
+      entityId: poId,
+      action: "issue",
+      performedBy: userId,
+      metadata: {
+        status: "ISSUED",
+      },
+    })
+
+    console.log("[issuePurchaseOrder] PO issued:", { poId })
+
+    return { success: true, data: po[0] }
+  } catch (error) {
+    console.error("[issuePurchaseOrder] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to issue PO",
+    }
+  }
+}
+
+/**
  * Get procurement queue for a specific user
  */
 export async function getProcurementQueue(organizationId: string) {
