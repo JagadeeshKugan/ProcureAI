@@ -5,6 +5,7 @@ import { getDb, schema } from "@/db"
 import { eq, and } from "drizzle-orm"
 import { ProcurementService } from "@/services/procurement.service"
 import { UserRepository } from "@/repositories/user.repository"
+import { AuditLogRepository } from "@/repositories/audit-log.repository"
 
 /**
  * Get procurement dashboard data
@@ -255,6 +256,206 @@ export async function bulkAssignRequests(
         error instanceof Error
           ? error.message
           : "Failed to bulk assign requests",
+    }
+  }
+}
+
+/**
+ * Create RFQ from approved request
+ */
+export async function createRFQFromRequest(
+  requestId: string,
+  organizationId: string,
+  vendorEmails: string[]
+) {
+  try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const db = getDb()
+
+    // Get request details
+    const request = await db
+      .select()
+      .from(schema.purchaseRequests)
+      .where(eq(schema.purchaseRequests.id, requestId))
+      .limit(1)
+
+    if (!request.length) {
+      return { success: false, error: "Request not found" }
+    }
+
+    // Generate RFQ number
+    const rfqCount = await db
+      .select()
+      .from(schema.rfqs)
+      .where(eq(schema.rfqs.organizationId, organizationId))
+
+    const rfqNumber = `RFQ-${new Date().getFullYear()}-${String(rfqCount.length + 1).padStart(4, "0")}`
+
+    // Create RFQ
+    const rfq = await db
+      .insert(schema.rfqs)
+      .values({
+        organizationId,
+        rfqNumber,
+        title: request[0].title,
+        description: request[0].description,
+        requestId,
+        status: "active",
+        createdBy: userId,
+      })
+      .returning()
+
+    // Create audit log
+    const auditRepo = new AuditLogRepository()
+    await auditRepo.create({
+      organizationId,
+      entityType: "rfq",
+      entityId: rfq[0].id,
+      action: "create",
+      performedBy: userId,
+      metadata: {
+        requestId,
+        rfqNumber,
+        vendorCount: vendorEmails.length,
+      },
+    })
+
+    console.log("[createRFQFromRequest] RFQ created:", { rfqNumber })
+
+    return { success: true, data: rfq[0] }
+  } catch (error) {
+    console.error("[createRFQFromRequest] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to create RFQ",
+    }
+  }
+}
+
+/**
+ * Select vendor for request
+ */
+export async function selectVendorForRequest(
+  requestId: string,
+  rfqId: string | null,
+  vendorId: string,
+  organizationId: string,
+  selectionReason?: string,
+  aiScore?: number
+) {
+  try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const procurementService = new ProcurementService()
+    const result = await procurementService.selectVendor(
+      requestId,
+      rfqId,
+      vendorId,
+      organizationId,
+      userId,
+      selectionReason,
+      aiScore
+    )
+
+    return result
+  } catch (error) {
+    console.error("[selectVendorForRequest] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to select vendor",
+    }
+  }
+}
+
+/**
+ * Get available vendors for RFQ
+ */
+export async function getAvailableVendors(organizationId: string) {
+  try {
+    const db = getDb()
+
+    const vendors = await db
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        email: schema.users.email,
+        role: schema.users.role,
+      })
+      .from(schema.users)
+      .where(
+        and(
+          eq(schema.users.organizationId, organizationId),
+          eq(schema.users.role, "vendor")
+        )
+      )
+
+    return { success: true, data: vendors }
+  } catch (error) {
+    console.error("[getAvailableVendors] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch vendors",
+    }
+  }
+}
+
+/**
+ * Get RFQ details with vendor quotes
+ */
+export async function getRFQWithQuotes(rfqId: string) {
+  try {
+    const db = getDb()
+
+    const rfq = await db
+      .select()
+      .from(schema.rfqs)
+      .where(eq(schema.rfqs.id, rfqId))
+      .limit(1)
+
+    if (!rfq.length) {
+      return { success: false, error: "RFQ not found" }
+    }
+
+    const quotes = await db
+      .select({
+        id: schema.vendorQuotes.id,
+        vendorId: schema.vendorQuotes.vendorId,
+        vendorName: schema.users.name,
+        vendorEmail: schema.users.email,
+        quotedPrice: schema.vendorQuotes.quotedPrice,
+        deliveryDays: schema.vendorQuotes.deliveryDays,
+        terms: schema.vendorQuotes.terms,
+        createdAt: schema.vendorQuotes.createdAt,
+      })
+      .from(schema.vendorQuotes)
+      .leftJoin(
+        schema.users,
+        eq(schema.vendorQuotes.vendorId, schema.users.id)
+      )
+      .where(eq(schema.vendorQuotes.rfqId, rfqId))
+
+    return {
+      success: true,
+      data: { rfq: rfq[0], quotes },
+    }
+  } catch (error) {
+    console.error("[getRFQWithQuotes] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch RFQ",
     }
   }
 }
