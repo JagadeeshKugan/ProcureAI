@@ -11,22 +11,54 @@ import { eq } from "drizzle-orm";
  */
 export async function syncUserToDatabase() {
   try {
-    const { userId } = await auth();
+    const authSession = await auth();
+    const { userId, orgId, orgRole } = authSession;
     const user = await currentUser();
-
     if (!userId || !user) {
       throw new Error("User not authenticated");
     }
 
     const db = getDb();
+    const mapRoleToAppRole = (role?: string | null): string => {
+      const roleMap: { [key: string]: string } = {
+        "org:admin": "admin",
+        "org:requester": "requester",
+        "org:procurement_manager": "procurement_manager",
+        "org:approver": "approver"
+      }
+      return roleMap[role!] || "member"
+    }
+
+    // Look up organization by clerkOrgId if orgId exists
+    let dbOrgId: string | null = null;
+    if (orgId) {
+      const existingOrg = await db
+        .select()
+        .from(schema.organizations)
+        .where(eq(schema.organizations.clerkOrgId, orgId))
+        .limit(1);
+
+      if (existingOrg.length > 0) {
+        dbOrgId = existingOrg[0].id;
+        console.log("[Auth] Found organization in database:", {
+          clerkOrgId: orgId,
+          dbOrgId: dbOrgId,
+        });
+      } else {
+        console.log("[Auth] Organization not found in database for clerkOrgId:", orgId);
+      }
+    }
 
     // Prepare user data from Clerk
     const userData = {
       clerkId: userId,
       email: user.emailAddresses[0]?.emailAddress || "",
       name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username || "",
-      // Role will be synced from orgRole which includes: org:approver, admin, buyer, requester, procurement_manager
-      role: "requester", // Default role, will be updated via useAuth().orgRole in components
+      organizationId: dbOrgId,
+      firstName: user.firstName || null,
+      lastName: user.lastName || null,
+      role: mapRoleToAppRole(orgRole),
+      status: "active",
     };
 
     // Check if user exists
@@ -44,6 +76,8 @@ export async function syncUserToDatabase() {
           email: userData.email,
           name: userData.name,
           role: userData.role,
+          organizationId: userData.organizationId,
+          status: userData.status,
           updatedAt: new Date(),
         })
         .where(eq(schema.users.clerkId, userId))

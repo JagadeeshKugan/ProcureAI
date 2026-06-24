@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server"
 import { getDb, schema } from "@/db"
-import { eq } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
 import { UserRepository } from "@/repositories/user.repository"
 import { PurchaseRequestRepository } from "@/repositories/purchase-request.repository"
 import { z } from "zod"
@@ -28,22 +28,50 @@ type CreatePRInput = z.infer<typeof createPRSchema>
 
 /**
  * Generate approval route based on estimated total
- * >$50k = 3 approvers (Finance Lead, Procurement Manager, CFO)
- * <$50k = 2 approvers (Procurement Manager, Approval Manager)
+ * Queries admin users from the organization
+ * >$50k = All admin users (up to max)
+ * <$50k = First admin user
  */
-function generateApprovalRoute(amount: number): string[] {
-  // Return dummy approver IDs - in production, query from team structure
-  if (amount > 50000) {
-    return [
-      "550e8400-e29b-41d4-a716-446655440001", // Finance Lead
-      "550e8400-e29b-41d4-a716-446655440002", // Procurement Manager
-      "550e8400-e29b-41d4-a716-446655440003", // CFO
-    ]
+async function generateApprovalRoute(
+  amount: number,
+  organizationId: string
+): Promise<string[]> {
+  const db = getDb()
+  
+  // Query admin users in the organization
+  const adminUsers = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(
+      and(
+        eq(schema.users.organizationId, organizationId),
+        eq(schema.users.role, "admin")
+      )
+    )
+    .limit(10)
+
+  const adminUserIds = adminUsers.map((u) => u.id)
+
+  console.log("[generateApprovalRoute] Found admin users:", {
+    amount,
+    organizationId,
+    count: adminUserIds.length,
+  })
+
+  if (adminUserIds.length === 0) {
+    console.warn(
+      "[generateApprovalRoute] No admin users found for organization:",
+      organizationId
+    )
+    return []
   }
-  return [
-    "550e8400-e29b-41d4-a716-446655440002", // Procurement Manager
-    "550e8400-e29b-41d4-a716-446655440004", // Approval Manager
-  ]
+
+  // For amounts > 50k, use all admin users (up to 3)
+  // For smaller amounts, use just the first admin
+  if (amount > 50000) {
+    return adminUserIds.slice(0, 3)
+  }
+  return adminUserIds.slice(0, 1)
 }
 
 /**
@@ -51,7 +79,8 @@ function generateApprovalRoute(amount: number): string[] {
  */
 export async function createPRDraft(input: CreatePRInput) {
   try {
-    const { userId } = await auth()
+    const { userId } = await auth();
+    
     if (!userId) {
       return { success: false, error: "Not authenticated" }
     }
@@ -155,9 +184,19 @@ export async function submitPRForApproval(requestId: string) {
       return { success: false, error: "Not authorized" }
     }
 
-    // Generate approval route based on amount
+    // Generate approval route based on amount and organization
     const approvalAmount = Number(pr.estimatedTotal) || 0
-    const approvalRoute = generateApprovalRoute(approvalAmount)
+    const approvalRoute = await generateApprovalRoute(
+      approvalAmount,
+      pr.organizationId
+    )
+
+    if (approvalRoute.length === 0) {
+      return {
+        success: false,
+        error: "No admin approvers found in your organization",
+      }
+    }
 
     const db = getDb()
     const result = await db.transaction(async () => {

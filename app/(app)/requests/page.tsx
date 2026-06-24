@@ -100,20 +100,32 @@ export default function RequestsPage() {
 
   // Convert DB requests to mock format for display
   const allRequests = React.useMemo((): (PurchaseRequest & { approvalRoute?: string[] })[] => {
-    const converted: (PurchaseRequest & { approvalRoute?: string[] })[] = dbRequests.map((r) => ({
-      id: r.id,
-      title: r.title,
-      requester: "System User",
-      department: r.department || "Engineering",
-      budget: Number(r.estimatedTotal) || 0,
-      status: (r.status === "draft" ? "Draft" : r.status === "pending_approval" ? "Pending Approval" : r.status === "approved" ? "Approved" : "In RFQ") as PurchaseRequest["status"],
-      category: "Equipment",
-      createdDate: r.createdAt?.toLocaleDateString(),
-      requiredDate: new Date().toLocaleDateString(),
-      businessNeed: "",
-      attachments: [],
-      approvalRoute: r.approvalRoute ? (JSON.parse(r.approvalRoute) as string[]) : undefined,
-    }))
+    const converted: (PurchaseRequest & { approvalRoute?: string[] })[] = dbRequests.map((r) => {
+      let approvalRoute: string[] | undefined = undefined
+      if (r.approvalRoute) {
+        try {
+          approvalRoute = JSON.parse(r.approvalRoute) as string[]
+        } catch (e) {
+          console.error("[RequestsPage] Failed to parse approvalRoute:", e)
+          approvalRoute = undefined
+        }
+      }
+      
+      return {
+        id: r.id,
+        title: r.title,
+        requester: "System User",
+        department: r.department || "Engineering",
+        budget: Number(r.estimatedTotal) || 0,
+        status: (r.status === "draft" ? "Draft" : r.status === "pending_approval" ? "Pending Approval" : r.status === "approved" ? "Approved" : "In RFQ") as PurchaseRequest["status"],
+        category: "Equipment",
+        createdDate: r.createdAt?.toLocaleDateString(),
+        requiredDate: new Date().toLocaleDateString(),
+        businessNeed: "",
+        attachments: [],
+        approvalRoute,
+      }
+    })
 
     // Add approval route to mock data and combine, sorted by newest first
     const withApprovals = purchaseRequests.map(pr => ({ ...pr, approvalRoute: undefined as string[] | undefined }))

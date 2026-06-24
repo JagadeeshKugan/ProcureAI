@@ -169,9 +169,20 @@ export async function listPurchaseRequests(page: number = 1, limit: number = 50)
 
     const userRepo = new UserRepository()
     const user = await userRepo.findByClerkId(userId)
-    if (!user || !user.organizationId) {
-      return { success: false, error: "User not in organization" }
+    if (!user) {
+      console.log("[listPurchaseRequests] User not found for userId:", userId)
+      return { success: true, data: { requests: [], pagination: { page, limit, total: 0, pages: 0 } } }
     }
+
+    if (!user.organizationId) {
+      console.log("[listPurchaseRequests] User has no organizationId:", {
+        userId,
+        userEmail: user.email,
+      })
+      return { success: true, data: { requests: [], pagination: { page, limit, total: 0, pages: 0 } } }
+    }
+
+    console.log("[listPurchaseRequests] Fetching requests for org:", user.organizationId)
 
     const prRepo = new PurchaseRequestRepository()
     const offset = (page - 1) * limit
