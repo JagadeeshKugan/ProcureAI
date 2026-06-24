@@ -426,9 +426,11 @@ export async function getRFQWithQuotes(rfqId: string) {
         vendorId: schema.vendorQuotes.vendorId,
         vendorName: schema.users.name,
         vendorEmail: schema.users.email,
-        quotedPrice: schema.vendorQuotes.quotedPrice,
-        deliveryDays: schema.vendorQuotes.deliveryDays,
-        terms: schema.vendorQuotes.terms,
+        price: schema.vendorQuotes.price,
+        deliveryTime: schema.vendorQuotes.deliveryTime,
+        warranty: schema.vendorQuotes.warranty,
+        notes: schema.vendorQuotes.notes,
+        status: schema.vendorQuotes.status,
         createdAt: schema.vendorQuotes.createdAt,
       })
       .from(schema.vendorQuotes)
