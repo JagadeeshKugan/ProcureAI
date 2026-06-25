@@ -296,8 +296,8 @@ export const notifications = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    userIdIdx: uniqueIndex("notification_user_idx").on(table.userId),
-    createdAtIdx: uniqueIndex("notification_created_at_idx").on(table.createdAt),
+    userIdIdx: index("notification_user_idx").on(table.userId),
+    createdAtIdx: index("notification_created_at_idx").on(table.createdAt),
   })
 )
 
