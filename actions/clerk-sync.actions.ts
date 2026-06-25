@@ -29,6 +29,7 @@ export async function syncClerkUserToDatabase() {
     const firstName = clerkUser?.firstName ?? ''
     const lastName = clerkUser?.lastName ?? ''
 
+    console.log("[clerkuser]", clerkUser, authSession)
     // Get organization if available
     const clerkOrgId = authSession.orgId
     const orgName = authSession.orgSlug || "Default Organization"
