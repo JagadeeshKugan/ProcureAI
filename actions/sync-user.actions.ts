@@ -26,7 +26,9 @@ export async function syncCurrentUser(organizationId?: string, orgRole?: string)
       const roleMap: { [key: string]: string } = {
         "org:admin": "admin",
         "org:member": "requester",
-        "org:manager": "procurement_manager",
+        "org:procurement_manager": "procurement_manager",
+        "org:approver": 'approver',
+        "org:vendor":'vendor'
       }
       return roleMap[role] || "requester"
     }
