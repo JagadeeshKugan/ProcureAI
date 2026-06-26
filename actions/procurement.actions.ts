@@ -259,18 +259,28 @@ export async function bulkAssignRequests(
 }
 
 /**
- * Create RFQ from approved request
+ * Create RFQ from approved request with vendors
  */
 export async function createRFQFromRequest(
   requestId: string,
   organizationId: string,
-  vendorEmails: string[]
+  vendorIds: string[],
+  dueDate?: string,
+  notes?: string,
+  termsAndConditions?: string,
+  expectedDeliveryDate?: string
 ) {
   try {
     const { userId } = await auth()
 
     if (!userId) {
       return { success: false, error: "Not authenticated" }
+    }
+
+    // Check authorization
+    const auth_ = await auth()
+    if (!auth_.orgRole || !["org:admin", "org:procurement_manager"].includes(auth_.orgRole)) {
+      return { success: false, error: "Unauthorized: Only admins and procurement managers can create RFQs" }
     }
 
     const db = getDb()
@@ -286,10 +296,15 @@ export async function createRFQFromRequest(
       return { success: false, error: "Request not found" }
     }
 
+    if (request[0].status !== "APPROVED") {
+      return { success: false, error: "Request must be approved before creating RFQ" }
+    }
+
     // Generate RFQ number
     const rfqCount = await db
       .select()
       .from(schema.rfqs)
+      .where(eq(schema.rfqs.organizationId, organizationId))
 
     const rfqNumber = `RFQ-${new Date().getFullYear()}-${String(rfqCount.length + 1).padStart(4, "0")}`
 
@@ -300,11 +315,22 @@ export async function createRFQFromRequest(
         organizationId,
         rfqNumber,
         title: request[0].title,
-        description: request[0].description,
+        description: request[0].description || notes,
         purchaseRequestId: requestId,
-        status: "sent",
+        status: "draft",
       })
       .returning()
+
+    // Add vendors to RFQ
+    if (vendorIds.length > 0) {
+      const rfqVendorValues = vendorIds.map((vendorId) => ({
+        rfqId: rfq[0].id,
+        vendorId,
+        status: "invited" as const,
+      }))
+
+      await db.insert(schema.rfqVendors).values(rfqVendorValues)
+    }
 
     // Create audit log
     const auditRepo = new AuditLogRepository()
@@ -312,18 +338,20 @@ export async function createRFQFromRequest(
       organizationId,
       entityType: "rfq",
       entityId: rfq[0].id,
-      action: "create",
+      action: "RFQ_CREATED",
       performedBy: userId,
       metadata: {
         requestId,
         rfqNumber,
-        vendorCount: vendorEmails.length,
+        vendorCount: vendorIds.length,
+        dueDate,
+        expectedDeliveryDate,
       },
     })
 
-    console.log("[createRFQFromRequest] RFQ created:", { rfqNumber })
+    console.log("[createRFQFromRequest] RFQ created:", { rfqNumber, vendorCount: vendorIds.length })
 
-    return { success: true, data: rfq[0] }
+    return { success: true, data: rfq[0], rfqId: rfq[0].id }
   } catch (error) {
     console.error("[createRFQFromRequest] Error:", error)
     return {

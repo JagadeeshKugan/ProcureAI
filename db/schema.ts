@@ -464,4 +464,29 @@ export const vendorSelections = pgTable(
 export type InsertVendorSelection = typeof vendorSelections.$inferInsert
 export type SelectVendorSelection = typeof vendorSelections.$inferSelect
 
+// RFQ Vendors table - Tracks which vendors are invited to an RFQ
+export const rfqVendors = pgTable(
+  "rfq_vendors",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    rfqId: uuid("rfq_id")
+      .notNull()
+      .references(() => rfqs.id, { onDelete: "cascade" }),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    invitedAt: timestamp("invited_at").defaultNow().notNull(),
+    status: varchar("status", { length: 20 }).default("invited"), // 'invited', 'quote_sent', 'quote_received', 'rejected'
+    reminderSentAt: timestamp("reminder_sent_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    rfqIdIdx: index("rfq_vendors_rfq_idx").on(table.rfqId),
+    vendorIdIdx: index("rfq_vendors_vendor_idx").on(table.vendorId),
+    rfqVendorUniqueIdx: uniqueIndex("rfq_vendors_unique_idx").on(table.rfqId, table.vendorId),
+  })
+)
+
+export type InsertRFQVendor = typeof rfqVendors.$inferInsert
+export type SelectRFQVendor = typeof rfqVendors.$inferSelect
 
