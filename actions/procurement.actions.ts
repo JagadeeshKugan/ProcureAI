@@ -439,7 +439,6 @@ export async function getAvailableVendors(organizationId: string) {
       .from(schema.users)
       .where(
         and(
-          eq(schema.users.organizationId, organizationId),
           eq(schema.users.role, "vendor")
         )
       )
