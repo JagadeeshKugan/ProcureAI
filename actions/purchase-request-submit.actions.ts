@@ -5,6 +5,8 @@ import { getDb, schema } from "@/db"
 import { eq, and, inArray } from "drizzle-orm"
 import { UserRepository } from "@/repositories/user.repository"
 import { PurchaseRequestRepository } from "@/repositories/purchase-request.repository"
+import { AuditLogRepository } from "@/repositories/audit-log.repository"
+import { OrganizationRepository } from "@/repositories/organization.repository"
 import { z } from "zod"
 
 const createPRSchema = z.object({
@@ -148,6 +150,22 @@ export async function createPRDraft(input: CreatePRInput) {
       return pr
     })
 
+    // Create audit log
+    const auditRepo = new AuditLogRepository()
+    await auditRepo.create({
+      organizationId: user.organizationId,
+      action: "REQUEST_CREATED",
+      entityType: "purchase_request",
+      entityId: result.id,
+      performedBy: user.id,
+      metadata: {
+        requestNumber: result.requestNumber,
+        title: result.title,
+        estimatedTotal: result.estimatedTotal,
+        priority: result.priority,
+      },
+    })
+
     return {
       success: true,
       requestId: result.id,
@@ -229,6 +247,23 @@ export async function submitPRForApproval(requestId: string) {
       }
 
       return updatedPR[0]
+    })
+
+    // Create audit log
+    const auditRepo = new AuditLogRepository()
+    await auditRepo.create({
+      organizationId: pr.organizationId,
+      action: "REQUEST_SUBMITTED",
+      entityType: "purchase_request",
+      entityId: result.id,
+      performedBy: user.id,
+      metadata: {
+        requestNumber: pr.requestNumber,
+        oldStatus: pr.status,
+        newStatus: result.status,
+        approverCount: approvalRoute.length,
+        estimatedTotal: pr.estimatedTotal,
+      },
     })
 
     return {

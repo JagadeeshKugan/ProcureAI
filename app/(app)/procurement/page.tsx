@@ -154,7 +154,7 @@ export default function ProcurementOfficerDashboard() {
         title="Procurement Officer Dashboard"
         description="Manage purchase requests, RFQs, and vendor quotes"
       >
-        <Link href="/procurement/requests/new">
+        <Link href="/requests/create">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             New Request

@@ -23,11 +23,12 @@ import { toast } from "sonner"
 interface RFQCreationModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  requestId: string
+  requestId?: string
   organizationId: string
-  requestNumber: string
+  requestNumber?: string
   requestTitle: string
   requestAmount?: string
+  showRequestSummary?: boolean
 }
 
 interface Vendor {
@@ -40,11 +41,12 @@ interface Vendor {
 export function RFQCreationModal({
   open,
   onOpenChange,
-  requestId,
+  requestId = "",
   organizationId,
-  requestNumber,
-  requestTitle,
+  requestNumber = "",
+  requestTitle = "New RFQ",
   requestAmount,
+  showRequestSummary = true,
 }: RFQCreationModalProps) {
   const { orgRole } = useAuth()
   const [loading, setLoading] = useState(false)
@@ -55,6 +57,8 @@ export function RFQCreationModal({
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("")
   const [notes, setNotes] = useState("")
   const [termsAndConditions, setTermsAndConditions] = useState("")
+  const [rfqTitle, setRFQTitle] = useState(requestTitle || "")
+  const [rfqDescription, setRFQDescription] = useState("")
 
   // Check authorization
   const isAuthorized =
@@ -102,16 +106,28 @@ export function RFQCreationModal({
       return
     }
 
+    // Validate title for standalone RFQ
+    if (!requestId && !rfqTitle) {
+      toast.error("Please specify an RFQ title")
+      return
+    }
+
     try {
       setLoading(true)
+
+      // Use provided description/title or default to request title
+      const finalTitle = rfqTitle || requestTitle || "New RFQ"
+      const finalDescription = rfqDescription || notes
+
       const result = await createRFQFromRequest(
         requestId,
         organizationId,
         selectedVendors,
         dueDate,
-        notes,
+        finalDescription,
         termsAndConditions,
-        expectedDeliveryDate
+        expectedDeliveryDate,
+        !requestId ? finalTitle : 'UnTitled' // Pass title for standalone RFQs
       )
 
       if (result.success) {
@@ -123,6 +139,8 @@ export function RFQCreationModal({
         setExpectedDeliveryDate("")
         setNotes("")
         setTermsAndConditions("")
+        setRFQTitle("")
+        setRFQDescription("")
       } else {
         toast.error(result.error || "Failed to create RFQ")
       }
@@ -144,24 +162,55 @@ export function RFQCreationModal({
         <DialogHeader>
           <DialogTitle>Create RFQ</DialogTitle>
           <DialogDescription>
-            Create a Request for Quotation for {requestNumber} - {requestTitle}
+            {requestId
+              ? `Create a Request for Quotation for ${requestNumber} - ${requestTitle}`
+              : "Create a new Request for Quotation"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Request Summary */}
-          <Card className="p-4 bg-blue-50 border-blue-200">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <Label className="text-blue-900 font-semibold">Request Number</Label>
-                <p className="text-blue-800">{requestNumber}</p>
+          {/* Request Summary - Only show when creating from approved request */}
+          {showRequestSummary && requestId && (
+            <Card className="p-4 bg-blue-50 border-blue-200">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <Label className="text-blue-900 font-semibold">Request Number</Label>
+                  <p className="text-blue-800">{requestNumber}</p>
+                </div>
+                <div>
+                  <Label className="text-blue-900 font-semibold">Amount</Label>
+                  <p className="text-blue-800">{requestAmount || "N/A"}</p>
+                </div>
               </div>
-              <div>
-                <Label className="text-blue-900 font-semibold">Amount</Label>
-                <p className="text-blue-800">{requestAmount || "N/A"}</p>
+            </Card>
+          )}
+
+          {/* Manual RFQ Title - Only show when creating standalone RFQ */}
+          {!requestId && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="rfqTitle">RFQ Title *</Label>
+                <Input
+                  id="rfqTitle"
+                  placeholder="e.g., Office Furniture Supplies"
+                  value={rfqTitle}
+                  onChange={(e) => setRFQTitle(e.target.value)}
+                  required
+                />
               </div>
-            </div>
-          </Card>
+
+              <div className="space-y-2">
+                <Label htmlFor="rfqDescription">Description</Label>
+                <Textarea
+                  id="rfqDescription"
+                  placeholder="Describe what you're looking to procure..."
+                  value={rfqDescription}
+                  onChange={(e) => setRFQDescription(e.target.value)}
+                  className="min-h-20"
+                />
+              </div>
+            </>
+          )}
 
           {/* Due Date */}
           <div className="space-y-2">
@@ -227,11 +276,10 @@ export function RFQCreationModal({
                     onClick={() => toggleVendor(vendor.id)}
                     className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition"
                   >
-                    <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${
-                      selectedVendors.includes(vendor.id)
+                    <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${selectedVendors.includes(vendor.id)
                         ? "bg-blue-600 border-blue-600"
                         : "border-gray-300"
-                    }`}>
+                      }`}>
                       {selectedVendors.includes(vendor.id) && (
                         <Check className="h-3 w-3 text-white" />
                       )}
