@@ -127,7 +127,7 @@ export default function ProcurementOfficerDashboard() {
         const result = await getProcurementDashboard(orgIdResult.organizationId)
         if (result.success && result.data) {
           setDashboardData(result.data)
-          
+           console.log({result})
           // Update stats with real data
           setWorkQueueStats({
             pendingRequests: result.data.metrics.approvedRequests,
@@ -154,12 +154,7 @@ export default function ProcurementOfficerDashboard() {
         title="Procurement Officer Dashboard"
         description="Manage purchase requests, RFQs, and vendor quotes"
       >
-        <Link href="/requests/create">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Request
-          </Button>
-        </Link>
+
       </PageHeader>
 
       {/* Work Queue Stats */}
