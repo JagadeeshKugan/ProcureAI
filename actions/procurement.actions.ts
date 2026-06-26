@@ -273,6 +273,9 @@ export async function createRFQFromRequest(
 ) {
   try {
     const { userId } = await auth()
+    const userRepo  = new UserRepository();
+    const user = await userRepo.findByClerkId(userId!)
+    const userUid = user.id;
 
     if (!userId) {
       return { success: false, error: "Not authenticated" }
@@ -357,7 +360,7 @@ export async function createRFQFromRequest(
       entityType: "rfq",
       entityId: rfq[0].id,
       action: "RFQ_CREATED",
-      performedBy: userId,
+      performedBy: userUid,
       metadata: {
         requestId: purchaseRequestId,
         rfqNumber,
