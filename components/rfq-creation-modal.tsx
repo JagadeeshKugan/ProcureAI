@@ -76,6 +76,7 @@ export function RFQCreationModal({
     try {
       setLoadingVendors(true)
       const result = await getAvailableVendors(organizationId)
+      console.log({result})
       if (result.success && result.data) {
         setVendors(result.data)
       } else {
