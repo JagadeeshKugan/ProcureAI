@@ -14,10 +14,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, X } from "lucide-react"
+import { Loader2, X, Check } from "lucide-react"
 import { createRFQFromRequest, getAvailableVendors } from "@/actions/procurement.actions"
 import { toast } from "sonner"
 
@@ -223,20 +222,24 @@ export function RFQCreationModal({
             ) : (
               <div className="grid grid-cols-1 gap-3 max-h-64 overflow-y-auto border rounded-lg p-3">
                 {vendors.map((vendor) => (
-                  <div key={vendor.id} className="flex items-start space-x-3">
-                    <Checkbox
-                      id={`vendor-${vendor.id}`}
-                      checked={selectedVendors.includes(vendor.id)}
-                      onCheckedChange={() => toggleVendor(vendor.id)}
-                      className="mt-1"
-                    />
-                    <Label
-                      htmlFor={`vendor-${vendor.id}`}
-                      className="flex-1 cursor-pointer"
-                    >
+                  <div
+                    key={vendor.id}
+                    onClick={() => toggleVendor(vendor.id)}
+                    className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition"
+                  >
+                    <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                      selectedVendors.includes(vendor.id)
+                        ? "bg-blue-600 border-blue-600"
+                        : "border-gray-300"
+                    }`}>
+                      {selectedVendors.includes(vendor.id) && (
+                        <Check className="h-3 w-3 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1">
                       <div className="font-medium">{vendor.name || "Unknown"}</div>
                       <div className="text-sm text-gray-500">{vendor.email}</div>
-                    </Label>
+                    </div>
                   </div>
                 ))}
               </div>
