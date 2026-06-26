@@ -302,7 +302,7 @@ export async function createRFQFromRequest(
         return { success: false, error: "Request not found" }
       }
 
-      if (request[0].status !== "APPROVED") {
+      if (request[0].status !== "procurement_review") {
         return { success: false, error: "Request must be approved before creating RFQ" }
       }
 
