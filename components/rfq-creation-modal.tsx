@@ -129,7 +129,7 @@ export function RFQCreationModal({
         finalDescription,
         termsAndConditions,
         expectedDeliveryDate,
-        !requestId ? finalTitle : 'UnTitled' // Pass title for standalone RFQs
+        finalTitle // Always pass the RFQ title (user-provided or from request)
       )
 
       if (result.success) {
@@ -193,32 +193,32 @@ export function RFQCreationModal({
             </Card>
           )}
 
-          {/* Manual RFQ Title - Only show when creating standalone RFQ */}
-          {!requestId && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="rfqTitle">RFQ Title *</Label>
-                <Input
-                  id="rfqTitle"
-                  placeholder="e.g., Office Furniture Supplies"
-                  value={rfqTitle}
-                  onChange={(e) => setRFQTitle(e.target.value)}
-                  required
-                />
-              </div>
+          {/* RFQ Title - Always show, can be edited for both request-linked and standalone RFQs */}
+          <div className="space-y-2">
+            <Label htmlFor="rfqTitle">RFQ Title *</Label>
+            <Input
+              id="rfqTitle"
+              placeholder={requestId ? `Based on: ${requestTitle}` : "e.g., Office Furniture Supplies"}
+              value={rfqTitle}
+              onChange={(e) => setRFQTitle(e.target.value)}
+              required
+            />
+            {requestId && (
+              <p className="text-xs text-gray-500">Pre-filled from request. Edit if needed.</p>
+            )}
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="rfqDescription">Description</Label>
-                <Textarea
-                  id="rfqDescription"
-                  placeholder="Describe what you're looking to procure..."
-                  value={rfqDescription}
-                  onChange={(e) => setRFQDescription(e.target.value)}
-                  className="min-h-20"
-                />
-              </div>
-            </>
-          )}
+          {/* RFQ Description */}
+          <div className="space-y-2">
+            <Label htmlFor="rfqDescription">Description</Label>
+            <Textarea
+              id="rfqDescription"
+              placeholder={requestId ? "Additional details or procurement notes..." : "Describe what you're looking to procure..."}
+              value={rfqDescription}
+              onChange={(e) => setRFQDescription(e.target.value)}
+              className="min-h-20"
+            />
+          </div>
 
           {/* Due Date */}
           <div className="space-y-2">
