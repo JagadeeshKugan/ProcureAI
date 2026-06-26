@@ -19,6 +19,7 @@ import {
   ClipboardList,
   ShoppingCart,
   History,
+  Package,
 } from "lucide-react"
 
 import {
@@ -61,6 +62,7 @@ const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: an
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
     { title: "All Requests", href: "/requests", icon: FileText },
+    { title: "Procurement", href: "/procurement", icon: Package },
     { title: "Finance", href: "/finance", icon: DollarSign },
     { title: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart },
     { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
@@ -81,6 +83,7 @@ const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: an
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
     { title: "All Requests", href: "/requests", icon: FileText },
+    { title: "Procurement", href: "/procurement", icon: Package },
     { title: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart },
     { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
     { title: "Vendors", href: "/vendors", icon: Building2 },
