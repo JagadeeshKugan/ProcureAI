@@ -33,46 +33,4 @@ export async function getAuditLogs(organizationId: string, limit: number = 50) {
   }
 }
 
-export async function createAuditLog(
-  organizationId: string,
-  action: string,
-  entityType: string,
-  entityId: string,
-  metadata?: any
-) {
-  try {
-    const { userId } = await auth()
-    if (!userId) {
-      return { success: false, error: "Unauthorized" }
-    }
 
-    const db = getDb()
-
-    // Get the app user ID from Clerk ID
-    const users = await db
-      .select({ id: schema.users.id })
-      .from(schema.users)
-      .where(eq(schema.users.clerkId, userId))
-      .limit(1)
-
-    if (!users || users.length === 0) {
-      return { success: false, error: "User not found in database" }
-    }
-
-    const appUserId = users[0].id
-
-    await db.insert(schema.auditLogs).values({
-      organizationId,
-      action,
-      entityType,
-      entityId,
-      performedBy: appUserId,
-      metadata,
-    })
-
-    return { success: true }
-  } catch (error) {
-    console.error("[createAuditLog Error]", error)
-    return { success: false, error: "Failed to create audit log" }
-  }
-}
