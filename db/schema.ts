@@ -10,6 +10,7 @@ import {
   foreignKey,
   numeric,
   index,
+  boolean,
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
@@ -137,7 +138,7 @@ export const purchaseRequestItems = pgTable(
       .notNull(),
   },
   (table) => ({
-    purchaseRequestIdIdx: uniqueIndex("pr_id_idx").on(table.purchaseRequestId),
+    purchaseRequestIdIdx: index("pr_id_idx").on(table.purchaseRequestId),
   })
 )
 
@@ -183,17 +184,18 @@ export const auditLogs = pgTable(
     entityId: uuid("entity_id").notNull(),
     action: varchar("action", { length: 50 }).notNull(), // 'create', 'update', 'delete', 'approve', 'reject', 'FINANCE_APPROVED'
     performedBy: uuid("performed_by")
-      .notNull()
-      .references(() => users.id, { onDelete: "set null" }),
+  .references(() => users.id, {
+      onDelete: "set null"
+  }),
     metadata: jsonb("metadata"), // Additional context about the action, includes oldValues, newValues, comments
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    entityTypeIdIdx: uniqueIndex("entity_type_id_idx").on(
+    entityTypeIdIdx: index("entity_type_id_idx").on(
       table.entityType,
       table.entityId
     ),
-    organizationIdIdx: uniqueIndex("audit_org_idx").on(table.organizationId),
+    organizationIdIdx: index("audit_org_idx").on(table.organizationId),
   })
 )
 
@@ -205,6 +207,9 @@ export const rfqs = pgTable(
   "rfqs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     rfqNumber: varchar("rfq_number", { length: 50 }).unique().notNull(),
     purchaseRequestId: uuid("purchase_request_id")
       .notNull()
@@ -220,6 +225,7 @@ export const rfqs = pgTable(
   },
   (table) => ({
     rfqNumberIdx: uniqueIndex("rfq_number_idx").on(table.rfqNumber),
+    orgIdIdx: index("rfq_org_idx").on(table.organizationId),
   })
 )
 
@@ -291,7 +297,7 @@ export const notifications = pgTable(
     message: text("message"),
     relatedEntityType: varchar("related_entity_type", { length: 50 }), // 'purchase_request', 'approval'
     relatedEntityId: uuid("related_entity_id"),
-    read: varchar("read", { length: 10 }).default("false"), // 'true', 'false'
+    read: boolean("read").default(false).notNull(), // 'true', 'false'
     actionUrl: text("action_url"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -328,7 +334,7 @@ export const financeApprovals = pgTable(
   },
   (table) => ({
     requestIdIdx: uniqueIndex("finance_approval_request_idx").on(table.requestId),
-    organizationIdIdx: uniqueIndex("finance_approval_org_idx").on(table.organizationId),
+    organizationIdIdx: index("finance_approval_org_idx").on(table.organizationId),
   })
 )
 
@@ -361,7 +367,7 @@ export const purchaseOrders = pgTable(
   (table) => ({
     poNumberIdx: uniqueIndex("po_number_idx").on(table.poNumber),
     requestIdIdx: uniqueIndex("po_request_idx").on(table.requestId),
-    organizationIdIdx: uniqueIndex("po_org_idx").on(table.organizationId),
+    organizationIdIdx: index("po_org_idx").on(table.organizationId),
   })
 )
 
@@ -382,7 +388,15 @@ export const purchaseOrderItems = pgTable(
     quantity: varchar("quantity", { length: 50 }).notNull(),
     unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
     totalPrice: numeric("total_price", { precision: 12, scale: 2 }).notNull(),
-  }
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    poIdIdx: index("poi_po_id_idx").on(table.purchaseOrderId),
+  })
 )
 
 export type InsertPurchaseOrderItem = typeof purchaseOrderItems.$inferInsert
