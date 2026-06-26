@@ -36,7 +36,7 @@ export async function getNotifications(limit: number = 10) {
       .orderBy(desc(schema.notifications.createdAt))
       .limit(limit)
 
-    const unreadCount = notifications.filter((n) => n.read === "false").length
+    const unreadCount = notifications.filter((n) => n.read === false).length
 
     return {
       success: true,
@@ -78,7 +78,7 @@ export async function markNotificationAsRead(notificationId: string) {
     await db
       .update(schema.notifications)
       .set({
-        read: "true",
+        read: true,
       })
       .where(
         and(
@@ -124,7 +124,7 @@ export async function markAllNotificationsAsRead() {
     await db
       .update(schema.notifications)
       .set({
-        read: "true",
+        read: true,
       })
       .where(eq(schema.notifications.userId, user.id))
 

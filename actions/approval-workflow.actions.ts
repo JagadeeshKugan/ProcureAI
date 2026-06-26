@@ -501,7 +501,7 @@ export async function markNotificationsAsRead(notificationIds: string[]) {
     await db
       .update(schema.notifications)
       .set({
-        read: "true",
+        read: true,
       })
       .where(
         and(
