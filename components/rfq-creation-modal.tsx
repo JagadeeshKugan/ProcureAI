@@ -34,7 +34,7 @@ interface Vendor {
   id: string
   name: string | null
   email: string | null
-  role: string
+  role: string | null
 }
 
 export function RFQCreationModal({
@@ -227,7 +227,7 @@ export function RFQCreationModal({
                     onClick={() => toggleVendor(vendor.id)}
                     className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition"
                   >
-                    <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                    <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${
                       selectedVendors.includes(vendor.id)
                         ? "bg-blue-600 border-blue-600"
                         : "border-gray-300"
