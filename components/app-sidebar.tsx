@@ -56,8 +56,6 @@ const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: an
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
     { title: "All Requests", href: "/requests", icon: FileText },
-    { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
-    { title: "Vendors", href: "/vendors", icon: Building2 },
   ],
   'org:admin': [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
