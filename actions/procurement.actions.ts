@@ -259,7 +259,7 @@ export async function bulkAssignRequests(
 }
 
 /**
- * Create RFQ from approved request with vendors
+ * Create RFQ from approved request with vendors or standalone RFQ
  */
 export async function createRFQFromRequest(
   requestId: string,
@@ -268,7 +268,8 @@ export async function createRFQFromRequest(
   dueDate?: string,
   notes?: string,
   termsAndConditions?: string,
-  expectedDeliveryDate?: string
+  expectedDeliveryDate?: string,
+  manualTitle?: string
 ) {
   try {
     const { userId } = await auth()
@@ -285,19 +286,30 @@ export async function createRFQFromRequest(
 
     const db = getDb()
 
-    // Get request details
-    const request = await db
-      .select()
-      .from(schema.purchaseRequests)
-      .where(eq(schema.purchaseRequests.id, requestId))
-      .limit(1)
+    let rfqTitle = manualTitle || "New RFQ"
+    let rfqDescription = notes || ""
+    let purchaseRequestId = requestId || null
 
-    if (!request.length) {
-      return { success: false, error: "Request not found" }
-    }
+    // If requestId is provided, get request details and validate
+    if (requestId) {
+      const request = await db
+        .select()
+        .from(schema.purchaseRequests)
+        .where(eq(schema.purchaseRequests.id, requestId))
+        .limit(1)
 
-    if (request[0].status !== "APPROVED") {
-      return { success: false, error: "Request must be approved before creating RFQ" }
+      if (!request.length) {
+        return { success: false, error: "Request not found" }
+      }
+
+      if (request[0].status !== "APPROVED") {
+        return { success: false, error: "Request must be approved before creating RFQ" }
+      }
+
+      // Use request details for standalone RFQ creation
+      rfqTitle = manualTitle || request[0].title
+      rfqDescription = rfqDescription || request[0].description || ""
+      purchaseRequestId = requestId
     }
 
     // Generate RFQ number
@@ -314,9 +326,9 @@ export async function createRFQFromRequest(
       .values({
         organizationId,
         rfqNumber,
-        title: request[0].title,
-        description: request[0].description || notes,
-        purchaseRequestId: requestId,
+        title: rfqTitle,
+        description: rfqDescription,
+        purchaseRequestId: purchaseRequestId,
         status: "draft",
       })
       .returning()
@@ -341,15 +353,17 @@ export async function createRFQFromRequest(
       action: "RFQ_CREATED",
       performedBy: userId,
       metadata: {
-        requestId,
+        requestId: purchaseRequestId,
         rfqNumber,
+        rfqTitle,
         vendorCount: vendorIds.length,
         dueDate,
         expectedDeliveryDate,
+        standalone: !requestId,
       },
     })
 
-    console.log("[createRFQFromRequest] RFQ created:", { rfqNumber, vendorCount: vendorIds.length })
+    console.log("[createRFQFromRequest] RFQ created:", { rfqNumber, vendorCount: vendorIds.length, standalone: !requestId })
 
     return { success: true, data: rfq[0], rfqId: rfq[0].id }
   } catch (error) {

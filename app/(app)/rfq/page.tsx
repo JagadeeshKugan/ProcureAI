@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@clerk/nextjs"
 import Link from "next/link"
 import { PageHeader } from "@/components/page-header"
 import { StatusBadge } from "@/components/status-badge"
@@ -23,11 +24,35 @@ import {
 } from "@/components/ui/input-group"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { rfqs, formatCurrency } from "@/lib/data"
+import { RFQCreationModal } from "@/components/rfq-creation-modal"
+import { getOrganizationIdFromClerk } from "@/actions/request-detail.actions"
 import { Plus, Search, Sparkles } from "lucide-react"
 
 export default function RfqPage() {
+  const { orgId, orgRole } = useAuth()
   const [query, setQuery] = useState("")
   const [tab, setTab] = useState("all")
+  const [rfqModalOpen, setRFQModalOpen] = useState(false)
+  const [dbOrgId, setDbOrgId] = useState<string | null>(null)
+  
+  const isAuthorizedForRFQ = orgRole && ["org:admin", "org:procurement_manager"].includes(orgRole)
+
+  useEffect(() => {
+    const fetchOrgId = async () => {
+      if (!orgId) return
+      
+      try {
+        const result = await getOrganizationIdFromClerk(orgId)
+        if (result.success && result.organizationId) {
+          setDbOrgId(result.organizationId)
+        }
+      } catch (error) {
+        console.error("[RFQPage] Failed to fetch org ID:", error)
+      }
+    }
+    
+    fetchOrgId()
+  }, [orgId])
 
   const filtered = rfqs.filter((rfq) => {
     const matchesQuery =
@@ -47,10 +72,15 @@ export default function RfqPage() {
         title="RFQ Management"
         description="Issue requests for quotes and let AI rank vendor responses."
       >
-        <Button className="cursor-pointer">
-          <Plus data-icon="inline-start" />
-          Create RFQ
-        </Button>
+        {isAuthorizedForRFQ && (
+          <Button 
+            className="cursor-pointer"
+            onClick={() => setRFQModalOpen(true)}
+          >
+            <Plus data-icon="inline-start" />
+            Create RFQ
+          </Button>
+        )}
       </PageHeader>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -133,6 +163,19 @@ export default function RfqPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* RFQ Creation Modal - For creating RFQ from existing approved requests */}
+      {dbOrgId && isAuthorizedForRFQ && (
+        <RFQCreationModal
+          open={rfqModalOpen}
+          onOpenChange={setRFQModalOpen}
+          requestId=""
+          organizationId={dbOrgId}
+          requestNumber=""
+          requestTitle="New RFQ"
+          showRequestSummary={false}
+        />
+      )}
     </div>
   )
 }
