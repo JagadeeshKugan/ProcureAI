@@ -76,12 +76,10 @@ const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: an
   ],
   'org:requester': [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "My Requests", href: "/department", icon: PlusCircle },
-    { title: "Request History", href: "/requests", icon: FileText },
+    { title: "My Request", href: "/requests", icon: FileText },
   ],
   'org:procurement_manager': [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
     { title: "All Requests", href: "/requests", icon: FileText },
     { title: "Procurement", href: "/procurement", icon: Package },
     { title: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart },

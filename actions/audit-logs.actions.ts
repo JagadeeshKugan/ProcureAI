@@ -3,10 +3,15 @@
 import { getDb, schema } from "@/db"
 import { eq, desc } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
+import { UserRepository } from "@/repositories/user.repository"
 
 export async function getAuditLogs(organizationId: string, limit: number = 50) {
   try {
     const db = getDb()
+    const {userId} = await auth()
+    const userRepo = new UserRepository()
+    const user = await userRepo.findByClerkId(userId!)
+    const orgUid = user.organizationId;
 
     const logs = await db
       .select({
@@ -22,7 +27,7 @@ export async function getAuditLogs(organizationId: string, limit: number = 50) {
       })
       .from(schema.auditLogs)
       .leftJoin(schema.users, eq(schema.auditLogs.performedBy, schema.users.id))
-      .where(eq(schema.auditLogs.organizationId, organizationId))
+      .where(eq(schema.auditLogs.organizationId, orgUid))
       .orderBy(desc(schema.auditLogs.createdAt))
       .limit(limit)
 
