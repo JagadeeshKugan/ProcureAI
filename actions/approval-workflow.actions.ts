@@ -236,6 +236,27 @@ export async function approveRequest(
           })
           .where(eq(schema.purchaseRequests.id, requestId))
 
+        // Create procurement assignment - assign to the first procurement manager in the org
+        const procurementManagers = await tx
+          .select({ id: schema.users.id })
+          .from(schema.users)
+          .where(
+            and(
+              eq(schema.users.organizationId, user.organizationId!),
+              eq(schema.users.role, "procurement_manager")
+            )
+          )
+          .limit(1)
+
+        if (procurementManagers.length > 0) {
+          await tx.insert(schema.procurementAssignments).values({
+            organizationId: user.organizationId!,
+            requestId,
+            assignedTo: procurementManagers[0].id,
+            status: "OPEN",
+          })
+        }
+
         // Notify requester
         await tx.insert(schema.notifications).values({
           userId: request.requestedBy,
