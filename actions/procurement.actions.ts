@@ -881,3 +881,53 @@ export async function getProcurementQueue(organizationId: string) {
     }
   }
 }
+
+/**
+ * Update procurement assignment status to COMPLETED when RFQ is created
+ * Also update purchase request status to "rfq_created"
+ */
+export async function updateProcurementAssignmentOnRFQCreation(
+  requestId: string,
+  rfqId: string
+) {
+  try {
+    const { userId } = await auth()
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const db = getDb()
+
+    // Update purchase request status to rfq_created
+    await db
+      .update(schema.purchaseRequests)
+      .set({
+        status: "rfq_created",
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.purchaseRequests.id, requestId))
+
+    // Update procurement assignment status to COMPLETED
+    await db
+      .update(schema.procurementAssignments)
+      .set({
+        status: "COMPLETED",
+        completedAt: new Date(),
+      })
+      .where(eq(schema.procurementAssignments.requestId, requestId))
+
+    console.log("[updateProcurementAssignmentOnRFQCreation] Assignment completed:", {
+      requestId,
+      rfqId,
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("[updateProcurementAssignmentOnRFQCreation] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to update assignment",
+    }
+  }
+}

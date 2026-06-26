@@ -29,6 +29,7 @@ interface RFQCreationModalProps {
   requestTitle: string
   requestAmount?: string
   showRequestSummary?: boolean
+  onRFQCreated?: (rfqId: string) => void | Promise<void>
 }
 
 interface Vendor {
@@ -47,6 +48,7 @@ export function RFQCreationModal({
   requestTitle = "New RFQ",
   requestAmount,
   showRequestSummary = true,
+  onRFQCreated,
 }: RFQCreationModalProps) {
   const { orgRole } = useAuth()
   const [loading, setLoading] = useState(false)
@@ -132,6 +134,12 @@ export function RFQCreationModal({
 
       if (result.success) {
         toast.success(`RFQ created successfully: ${result.data?.rfqNumber}`)
+        
+        // Call the callback if provided
+        if (onRFQCreated && result.rfqId) {
+          await onRFQCreated(result.rfqId)
+        }
+        
         onOpenChange(false)
         // Reset form
         setSelectedVendors([])
