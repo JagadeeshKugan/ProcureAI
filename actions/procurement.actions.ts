@@ -288,7 +288,7 @@ export async function createRFQFromRequest(
 
     let rfqTitle = manualTitle || "New RFQ"
     let rfqDescription = notes || ""
-    let purchaseRequestId = requestId || null
+    let purchaseRequestId = requestId
 
     // If requestId is provided, get request details and validate
     if (requestId) {
@@ -307,9 +307,15 @@ export async function createRFQFromRequest(
       }
 
       // Use request details for standalone RFQ creation
-      rfqTitle = manualTitle || request[0].title
+      rfqTitle = manualTitle || request[0].title || 'untitled rfq'
       rfqDescription = rfqDescription || request[0].description || ""
       purchaseRequestId = requestId
+    }
+    if (!rfqTitle) {
+      throw new Error("RFQ title is required")
+    }
+    if (!organizationId) {
+      throw new Error("Organization not found")
     }
 
     // Generate RFQ number

@@ -26,7 +26,7 @@ interface RFQCreationModalProps {
   requestId?: string
   organizationId: string
   requestNumber?: string
-  requestTitle?: string
+  requestTitle: string
   requestAmount?: string
   showRequestSummary?: boolean
 }
@@ -114,11 +114,11 @@ export function RFQCreationModal({
 
     try {
       setLoading(true)
-      
+
       // Use provided description/title or default to request title
       const finalTitle = rfqTitle || requestTitle || "New RFQ"
       const finalDescription = rfqDescription || notes
-      
+
       const result = await createRFQFromRequest(
         requestId,
         organizationId,
@@ -127,7 +127,7 @@ export function RFQCreationModal({
         finalDescription,
         termsAndConditions,
         expectedDeliveryDate,
-        !requestId ? finalTitle : undefined // Pass title for standalone RFQs
+        !requestId ? finalTitle : 'UnTitled' // Pass title for standalone RFQs
       )
 
       if (result.success) {
@@ -162,7 +162,7 @@ export function RFQCreationModal({
         <DialogHeader>
           <DialogTitle>Create RFQ</DialogTitle>
           <DialogDescription>
-            {requestId 
+            {requestId
               ? `Create a Request for Quotation for ${requestNumber} - ${requestTitle}`
               : "Create a new Request for Quotation"}
           </DialogDescription>
@@ -276,11 +276,10 @@ export function RFQCreationModal({
                     onClick={() => toggleVendor(vendor.id)}
                     className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition"
                   >
-                    <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${
-                      selectedVendors.includes(vendor.id)
+                    <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${selectedVendors.includes(vendor.id)
                         ? "bg-blue-600 border-blue-600"
                         : "border-gray-300"
-                    }`}>
+                      }`}>
                       {selectedVendors.includes(vendor.id) && (
                         <Check className="h-3 w-3 text-white" />
                       )}
