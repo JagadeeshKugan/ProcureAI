@@ -163,7 +163,7 @@ export class ProcurementRepository {
       .where(
         and(
           eq(schema.purchaseRequests.organizationId, organizationId),
-          eq(schema.purchaseRequests.status, "finance_approved")
+          eq(schema.purchaseRequests.status, "procurement_review")
         )
       )
       .orderBy(desc(schema.purchaseRequests.createdAt))
@@ -182,7 +182,7 @@ export class ProcurementRepository {
       )
 
     const approvedCount = allRequests.filter(
-      (r) => r.status === "finance_approved"
+      (r) => r.status === "procurement_review"
     ).length
     const rfqCount = allRequests.filter((r) => r.status === "in_rfq").length
     const completedCount = allRequests.filter(
