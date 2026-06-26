@@ -12,6 +12,9 @@ export async function getAuditLogs(organizationId: string, limit: number = 50) {
     const userRepo = new UserRepository()
     const user = await userRepo.findByClerkId(userId!)
     const orgUid = user.organizationId;
+    if (!orgUid) {
+  throw new Error("Organization not found")
+}
 
     const logs = await db
       .select({
