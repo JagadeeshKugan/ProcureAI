@@ -75,6 +75,8 @@ export async function syncUserToDatabase() {
         .set({
           email: userData.email,
           name: userData.name,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
           role: userData.role,
           organizationId: userData.organizationId,
           status: userData.status,
@@ -83,13 +85,25 @@ export async function syncUserToDatabase() {
         .where(eq(schema.users.clerkId, userId))
         .returning();
 
-      console.log("[Auth] User updated:", result[0]?.email);
+      console.log("[Auth] User updated:", {
+        email: result[0]?.email,
+        name: result[0]?.name,
+        role: result[0]?.role,
+        organizationId: result[0]?.organizationId,
+        status: result[0]?.status,
+      });
       return result[0] || null;
     } else {
       // Create new user
       const result = await db.insert(schema.users).values(userData).returning();
 
-      console.log("[Auth] New user created:", result[0]?.email);
+      console.log("[Auth] New user created:", {
+        email: result[0]?.email,
+        name: result[0]?.name,
+        role: result[0]?.role,
+        organizationId: result[0]?.organizationId,
+        status: result[0]?.status,
+      });
       return result[0] || null;
     }
   } catch (error) {

@@ -1,6 +1,6 @@
 "use server"
 
-import { auth } from "@clerk/nextjs/server"
+import { auth, currentUser } from "@clerk/nextjs/server"
 import { ClerkSyncService } from "@/services/clerk-sync.service"
 
 const syncService = new ClerkSyncService()
@@ -14,6 +14,7 @@ export async function syncClerkUserToDatabase() {
   try {
     // Get authenticated user and organization from Clerk
     const authSession = await auth()
+    const clerkUser = await currentUser()
 
     if (!authSession.userId) {
       return {
@@ -22,13 +23,13 @@ export async function syncClerkUserToDatabase() {
       }
     }
 
-    // Get user details from Clerk session
-    const user = authSession
+    // Get user details from Clerk
     const clerkUserId = authSession.userId
-    const email = user.sessionClaims?.email as string
-    const firstName = user.sessionClaims?.given_name as string | undefined
-    const lastName = user.sessionClaims?.family_name as string | undefined
+    const email = clerkUser?.emailAddresses[0]?.emailAddress
+    const firstName = clerkUser?.firstName ?? ''
+    const lastName = clerkUser?.lastName ?? ''
 
+    console.log("[clerkuser]", clerkUser, authSession)
     // Get organization if available
     const clerkOrgId = authSession.orgId
     const orgName = authSession.orgSlug || "Default Organization"

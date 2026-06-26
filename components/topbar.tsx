@@ -83,7 +83,8 @@ export function Topbar() {
     setLogoutOpen(false)
     await signOut({
       redirectUrl: "/sign-in",
-    })
+    });
+    window.location.reload();
   }
 
   const segments = pathname.split("/").filter(Boolean)
@@ -190,9 +191,6 @@ export function Topbar() {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">
-                  {orgRole ? orgRole.replace(/_/g, " ").replace("org:", "") : "Role"}
-                </span>
                 <Badge
                   variant="secondary"
                   className="text-xs h-5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
@@ -244,7 +242,7 @@ export function Topbar() {
           </AlertDialogDescription>
           <div className="flex gap-3 justify-end">
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={handleLogout} className="bg-destructive text-white hover:bg-destructive/90">
               Sign Out
             </AlertDialogAction>
           </div>

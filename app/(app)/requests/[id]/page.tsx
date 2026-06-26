@@ -4,13 +4,14 @@ import { useEffect, useState } from "react"
 import { useAuth } from "@clerk/nextjs"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, FileText, Clock, CheckCircle, AlertCircle, DollarSign, ShoppingCart } from "lucide-react"
-import { getRequestDetails } from "@/actions/request-detail.actions"
+import { ArrowLeft, FileText, Clock, CheckCircle, AlertCircle, DollarSign, ShoppingCart, FileSpreadsheet } from "lucide-react"
+import { getRequestDetails, getOrganizationIdFromClerk } from "@/actions/request-detail.actions"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { RFQCreationModal } from "@/components/rfq-creation-modal"
 import { toast } from "sonner"
 
 interface RequestDetail {
@@ -109,7 +110,7 @@ const getActionIcon = (action: string) => {
 }
 
 export default function RequestDetailPage() {
-  const { orgId } = useAuth()
+  const { orgId, orgRole } = useAuth()
   const router = useRouter()
   const params = useParams()
   const requestId = params.id as string
@@ -119,19 +120,38 @@ export default function RequestDetailPage() {
   const [po, setPO] = useState<PurchaseOrder | null>(null)
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
+  const [dbOrgId, setDbOrgId] = useState<string | null>(null)
+  const [rfqModalOpen, setRFQModalOpen] = useState(false)
+
+  const isAuthorizedForRFQ = orgRole && ["org:admin", "org:procurement_manager"].includes(orgRole)
 
   useEffect(() => {
     const loadDetails = async () => {
       if (!orgId || !requestId) return
 
-      const result = await getRequestDetails(requestId, orgId)
-      if (result.success) {
-        setRequest(result.request ?? null)
-        setFinanceApproval(result.financeApproval ?? null)
-        setPO(result.purchaseOrder ?? null)
-        setAuditLogs(result.auditLogs ?? [])
-      } else {
-        toast.error("Failed to load request details")
+      try {
+        // First, get the database organization UUID from the Clerk organization ID
+        const orgIdResult = await getOrganizationIdFromClerk(orgId)
+        if (!orgIdResult.success || !orgIdResult.organizationId) {
+          toast.error("Organization not found")
+          setLoading(false)
+          return
+        }
+        setDbOrgId(orgIdResult.organizationId)
+
+        // Now fetch request details using the database organization UUID
+        const result = await getRequestDetails(requestId, orgIdResult.organizationId)
+        if (result.success) {
+          setRequest(result.request ?? null)
+          setFinanceApproval(result.financeApproval ?? null)
+          setPO(result.purchaseOrder ?? null)
+          setAuditLogs(result.auditLogs ?? [])
+        } else {
+          toast.error("Failed to load request details")
+        }
+      } catch (error) {
+        console.error("[RequestDetail] Error loading request:", error)
+        toast.error("An error occurred while loading request details")
       }
       setLoading(false)
     }
@@ -155,19 +175,30 @@ export default function RequestDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <PageHeader
-          title={request.requestNumber}
-          description={request.title}
-
-        />
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <PageHeader
+            title={request.requestNumber}
+            description={request.title}
+          />
+        </div>
+        {/* Create RFQ Button - Only for approved requests and authorized roles */}
+        {request.status === "APPROVED" && isAuthorizedForRFQ && dbOrgId && (
+          <Button
+            onClick={() => setRFQModalOpen(true)}
+            className="gap-2"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            Create RFQ
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
@@ -353,6 +384,19 @@ export default function RequestDetailPage() {
           </div>
         </div>
       </Card>
+
+      {/* RFQ Creation Modal */}
+      {dbOrgId && (
+        <RFQCreationModal
+          open={rfqModalOpen}
+          onOpenChange={setRFQModalOpen}
+          requestId={requestId}
+          organizationId={dbOrgId}
+          requestNumber={request.requestNumber}
+          requestTitle={request.title}
+          requestAmount={request.currency ? `${request.currency} ${parseFloat(request.estimatedTotal!).toLocaleString("en-US", { minimumFractionDigits: 2 })}` : undefined}
+        />
+      )}
     </div>
   )
 }

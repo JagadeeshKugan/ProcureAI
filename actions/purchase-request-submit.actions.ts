@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server"
 import { getDb, schema } from "@/db"
-import { eq, and } from "drizzle-orm"
+import { eq, and, inArray } from "drizzle-orm"
 import { UserRepository } from "@/repositories/user.repository"
 import { PurchaseRequestRepository } from "@/repositories/purchase-request.repository"
 import { z } from "zod"
@@ -28,9 +28,9 @@ type CreatePRInput = z.infer<typeof createPRSchema>
 
 /**
  * Generate approval route based on estimated total
- * Queries admin users from the organization
- * >$50k = All admin users (up to max)
- * <$50k = First admin user
+ * Queries admin and approver users from the organization
+ * >$50k = Up to 3 approvers (prioritize admin, then approver)
+ * <$50k = First approver found (admin or approver)
  */
 async function generateApprovalRoute(
   amount: number,
@@ -38,40 +38,46 @@ async function generateApprovalRoute(
 ): Promise<string[]> {
   const db = getDb()
   
-  // Query admin users in the organization
-  const adminUsers = await db
-    .select({ id: schema.users.id })
+  // Query both admin and approver users in the organization
+  const approvers = await db
+    .select({ id: schema.users.id, role: schema.users.role })
     .from(schema.users)
     .where(
       and(
         eq(schema.users.organizationId, organizationId),
-        eq(schema.users.role, "admin")
+        // Include both admin and approver roles
+        inArray(schema.users.role, ["admin", "approver"])
       )
     )
+    .orderBy(schema.users.role) // Admins come first alphabetically
     .limit(10)
 
-  const adminUserIds = adminUsers.map((u) => u.id)
+  const approverUserIds = approvers.map((u) => u.id)
 
-  console.log("[generateApprovalRoute] Found admin users:", {
+  console.log("[generateApprovalRoute] Found approvers:", {
     amount,
     organizationId,
-    count: adminUserIds.length,
+    totalApprovers: approverUserIds.length,
+    breakdown: {
+      admins: approvers.filter((u) => u.role === "admin").length,
+      approvers: approvers.filter((u) => u.role === "approver").length,
+    },
   })
 
-  if (adminUserIds.length === 0) {
+  if (approverUserIds.length === 0) {
     console.warn(
-      "[generateApprovalRoute] No admin users found for organization:",
+      "[generateApprovalRoute] No admin or approver users found for organization:",
       organizationId
     )
     return []
   }
 
-  // For amounts > 50k, use all admin users (up to 3)
-  // For smaller amounts, use just the first admin
+  // For amounts > 50k, use up to 3 approvers (mix of admin and approver)
+  // For smaller amounts, use just the first approver
   if (amount > 50000) {
-    return adminUserIds.slice(0, 3)
+    return approverUserIds.slice(0, 3)
   }
-  return adminUserIds.slice(0, 1)
+  return approverUserIds.slice(0, 1)
 }
 
 /**

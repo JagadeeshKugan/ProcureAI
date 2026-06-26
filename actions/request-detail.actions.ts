@@ -87,3 +87,36 @@ export async function getRequestDetails(requestId: string, organizationId: strin
     return { success: false, error: "Failed to fetch request details" }
   }
 }
+
+/**
+ * Get database organization UUID from Clerk organization ID
+ * This is needed because we store database UUIDs in the organization field,
+ * not Clerk's organization IDs
+ */
+export async function getOrganizationIdFromClerk(clerkOrgId: string) {
+  try {
+    if (!clerkOrgId) {
+      return { success: false, error: "Clerk organization ID is required" }
+    }
+
+    const db = getDb()
+
+    const org = await db
+      .select({ id: schema.organizations.id })
+      .from(schema.organizations)
+      .where(eq(schema.organizations.clerkOrgId, clerkOrgId))
+      .limit(1)
+
+    if (!org.length) {
+      return { success: false, error: "Organization not found" }
+    }
+
+    return {
+      success: true,
+      organizationId: org[0].id,
+    }
+  } catch (error) {
+    console.error("[getOrganizationIdFromClerk Error]", error)
+    return { success: false, error: "Failed to fetch organization" }
+  }
+}

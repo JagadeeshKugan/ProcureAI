@@ -1,4 +1,7 @@
-import { Suspense } from "react"
+"use client"
+
+import { Suspense, useEffect, useState } from "react"
+import { useAuth } from "@clerk/nextjs"
 import { Plus, Filter } from "lucide-react"
 import Link from "next/link"
 
@@ -8,8 +11,11 @@ import { WorkQueueStats } from "@/components/procurement/work-queue-stats"
 import { WorkQueue } from "@/components/procurement/work-queue"
 import { RFQManagement } from "@/components/procurement/rfq-management"
 import { ProcurementActivityFeed } from "@/components/procurement/activity-feed"
+import { getProcurementDashboard } from "@/actions/procurement.actions"
+import { getOrganizationIdFromClerk } from "@/actions/request-detail.actions"
+import { toast } from "sonner"
 
-// Mock data - replace with actual server component data fetching
+// Fallback mock data for loading state
 const mockWorkQueueStats = {
   pendingRequests: 12,
   rfqsRequiringAction: 5,
@@ -97,6 +103,51 @@ const mockActivities = [
 ]
 
 export default function ProcurementOfficerDashboard() {
+  const { orgId, orgRole } = useAuth()
+  const [dashboardData, setDashboardData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [workQueueStats, setWorkQueueStats] = useState(mockWorkQueueStats)
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!orgId || (orgRole !== "org:admin" && orgRole !== "org:procurement_manager")) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        // Get database org ID from Clerk org ID
+        const orgIdResult = await getOrganizationIdFromClerk(orgId)
+        if (!orgIdResult.success || !orgIdResult.organizationId) {
+          console.error("[ProcurementDashboard] Organization not found")
+          setLoading(false)
+          return
+        }
+
+        const result = await getProcurementDashboard(orgIdResult.organizationId)
+        if (result.success && result.data) {
+          setDashboardData(result.data)
+          
+          // Update stats with real data
+          setWorkQueueStats({
+            pendingRequests: result.data.metrics.approvedRequests,
+            rfqsRequiringAction: result.data.metrics.openRFQs,
+            completedThisWeek: result.data.metrics.completedProcurements,
+            avgProcessingTime: result.data.metrics.activeAssignments,
+          })
+        } else {
+          console.error("[ProcurementDashboard] Failed to load data:", result.error)
+        }
+      } catch (error) {
+        console.error("[ProcurementDashboard] Error loading dashboard:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [orgId, orgRole])
+
   return (
     <>
       <PageHeader
@@ -113,7 +164,7 @@ export default function ProcurementOfficerDashboard() {
 
       {/* Work Queue Stats */}
       <Suspense fallback={<WorkQueueStats stats={mockWorkQueueStats} isLoading />}>
-        <WorkQueueStats stats={mockWorkQueueStats} />
+        <WorkQueueStats stats={workQueueStats} isLoading={loading} />
       </Suspense>
 
       {/* Main Content Grid */}
@@ -121,21 +172,27 @@ export default function ProcurementOfficerDashboard() {
         {/* Work Queue - Full Width */}
         <div className="lg:col-span-2">
           <Suspense fallback={<WorkQueue items={mockWorkItems} isLoading />}>
-            <WorkQueue items={mockWorkItems} />
+            <WorkQueue 
+              items={dashboardData?.approvedRequests || mockWorkItems}
+              isLoading={loading}
+            />
           </Suspense>
         </div>
 
         {/* Activity Feed - Sidebar */}
         <div>
           <Suspense fallback={<ProcurementActivityFeed activities={mockActivities} isLoading />}>
-            <ProcurementActivityFeed activities={mockActivities} />
+            <ProcurementActivityFeed activities={mockActivities} isLoading={loading} />
           </Suspense>
         </div>
       </div>
 
       {/* RFQ Management - Full Width */}
       <Suspense fallback={<RFQManagement rfqs={mockRFQs} isLoading />}>
-        <RFQManagement rfqs={mockRFQs} />
+        <RFQManagement 
+          rfqs={dashboardData?.rfqs || mockRFQs}
+          isLoading={loading}
+        />
       </Suspense>
     </>
   )

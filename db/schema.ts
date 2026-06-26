@@ -10,6 +10,7 @@ import {
   foreignKey,
   numeric,
   index,
+  boolean,
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
@@ -60,7 +61,7 @@ export const users = pgTable(
   (table) => ({
     clerkIdIdx: uniqueIndex("clerk_id_idx").on(table.clerkId),
     emailIdx: uniqueIndex("email_idx").on(table.email),
-    organizationIdIdx: uniqueIndex("organization_id_idx").on(table.organizationId),
+    organizationIdIdx: index("organization_id_idx").on(table.organizationId),
   })
 )
 
@@ -137,7 +138,7 @@ export const purchaseRequestItems = pgTable(
       .notNull(),
   },
   (table) => ({
-    purchaseRequestIdIdx: uniqueIndex("pr_id_idx").on(table.purchaseRequestId),
+    purchaseRequestIdIdx: index("pr_id_idx").on(table.purchaseRequestId),
   })
 )
 
@@ -183,17 +184,18 @@ export const auditLogs = pgTable(
     entityId: uuid("entity_id").notNull(),
     action: varchar("action", { length: 50 }).notNull(), // 'create', 'update', 'delete', 'approve', 'reject', 'FINANCE_APPROVED'
     performedBy: uuid("performed_by")
-      .notNull()
-      .references(() => users.id, { onDelete: "set null" }),
+  .references(() => users.id, {
+      onDelete: "set null"
+  }),
     metadata: jsonb("metadata"), // Additional context about the action, includes oldValues, newValues, comments
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    entityTypeIdIdx: uniqueIndex("entity_type_id_idx").on(
+    entityTypeIdIdx: index("entity_type_id_idx").on(
       table.entityType,
       table.entityId
     ),
-    organizationIdIdx: uniqueIndex("audit_org_idx").on(table.organizationId),
+    organizationIdIdx: index("audit_org_idx").on(table.organizationId),
   })
 )
 
@@ -205,6 +207,9 @@ export const rfqs = pgTable(
   "rfqs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     rfqNumber: varchar("rfq_number", { length: 50 }).unique().notNull(),
     purchaseRequestId: uuid("purchase_request_id")
       .notNull()
@@ -220,6 +225,7 @@ export const rfqs = pgTable(
   },
   (table) => ({
     rfqNumberIdx: uniqueIndex("rfq_number_idx").on(table.rfqNumber),
+    orgIdIdx: index("rfq_org_idx").on(table.organizationId),
   })
 )
 
@@ -291,13 +297,13 @@ export const notifications = pgTable(
     message: text("message"),
     relatedEntityType: varchar("related_entity_type", { length: 50 }), // 'purchase_request', 'approval'
     relatedEntityId: uuid("related_entity_id"),
-    read: varchar("read", { length: 10 }).default("false"), // 'true', 'false'
+    read: boolean("read").default(false).notNull(), // 'true', 'false'
     actionUrl: text("action_url"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    userIdIdx: uniqueIndex("notification_user_idx").on(table.userId),
-    createdAtIdx: uniqueIndex("notification_created_at_idx").on(table.createdAt),
+    userIdIdx: index("notification_user_idx").on(table.userId),
+    createdAtIdx: index("notification_created_at_idx").on(table.createdAt),
   })
 )
 
@@ -328,7 +334,7 @@ export const financeApprovals = pgTable(
   },
   (table) => ({
     requestIdIdx: uniqueIndex("finance_approval_request_idx").on(table.requestId),
-    organizationIdIdx: uniqueIndex("finance_approval_org_idx").on(table.organizationId),
+    organizationIdIdx: index("finance_approval_org_idx").on(table.organizationId),
   })
 )
 
@@ -361,7 +367,7 @@ export const purchaseOrders = pgTable(
   (table) => ({
     poNumberIdx: uniqueIndex("po_number_idx").on(table.poNumber),
     requestIdIdx: uniqueIndex("po_request_idx").on(table.requestId),
-    organizationIdIdx: uniqueIndex("po_org_idx").on(table.organizationId),
+    organizationIdIdx: index("po_org_idx").on(table.organizationId),
   })
 )
 
@@ -382,11 +388,105 @@ export const purchaseOrderItems = pgTable(
     quantity: varchar("quantity", { length: 50 }).notNull(),
     unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
     totalPrice: numeric("total_price", { precision: 12, scale: 2 }).notNull(),
-  }
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    poIdIdx: index("poi_po_id_idx").on(table.purchaseOrderId),
+  })
 )
 
 export type InsertPurchaseOrderItem = typeof purchaseOrderItems.$inferInsert
 export type SelectPurchaseOrderItem = typeof purchaseOrderItems.$inferSelect
 
+// Procurement Assignments table - Tracks which procurement manager owns each approved request
+export const procurementAssignments = pgTable(
+  "procurement_assignments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => purchaseRequests.id, { onDelete: "cascade" }),
+    assignedTo: uuid("assigned_to")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    status: varchar("status", { length: 20 }).default("OPEN"), // 'OPEN', 'IN_PROGRESS', 'COMPLETED'
+    assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    requestIdIdx: index("pa_request_idx").on(table.requestId),
+    assignedToIdx: index("pa_assigned_to_idx").on(table.assignedTo),
+    organizationIdIdx: index("pa_org_idx").on(table.organizationId),
+  })
+)
 
+export type InsertProcurementAssignment = typeof procurementAssignments.$inferInsert
+export type SelectProcurementAssignment = typeof procurementAssignments.$inferSelect
+
+// Vendor Selections table - Tracks which vendor was selected for each request
+export const vendorSelections = pgTable(
+  "vendor_selections",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => purchaseRequests.id, { onDelete: "cascade" }),
+    rfqId: uuid("rfq_id").references(() => rfqs.id, { onDelete: "set null" }),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    selectedBy: uuid("selected_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    selectionReason: text("selection_reason"),
+    aiScore: numeric("ai_score", { precision: 5, scale: 2 }), // Score from 0-100
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    requestIdUniqueIdx: uniqueIndex("vs_request_unique_idx").on(table.requestId),
+    rfqIdIdx: index("vs_rfq_idx").on(table.rfqId),
+    vendorIdIdx: index("vs_vendor_idx").on(table.vendorId),
+    organizationIdIdx: index("vs_org_idx").on(table.organizationId),
+  })
+)
+
+export type InsertVendorSelection = typeof vendorSelections.$inferInsert
+export type SelectVendorSelection = typeof vendorSelections.$inferSelect
+
+// RFQ Vendors table - Tracks which vendors are invited to an RFQ
+export const rfqVendors = pgTable(
+  "rfq_vendors",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    rfqId: uuid("rfq_id")
+      .notNull()
+      .references(() => rfqs.id, { onDelete: "cascade" }),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    invitedAt: timestamp("invited_at").defaultNow().notNull(),
+    status: varchar("status", { length: 20 }).default("invited"), // 'invited', 'quote_sent', 'quote_received', 'rejected'
+    reminderSentAt: timestamp("reminder_sent_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    rfqIdIdx: index("rfq_vendors_rfq_idx").on(table.rfqId),
+    vendorIdIdx: index("rfq_vendors_vendor_idx").on(table.vendorId),
+    rfqVendorUniqueIdx: uniqueIndex("rfq_vendors_unique_idx").on(table.rfqId, table.vendorId),
+  })
+)
+
+export type InsertRFQVendor = typeof rfqVendors.$inferInsert
+export type SelectRFQVendor = typeof rfqVendors.$inferSelect
 

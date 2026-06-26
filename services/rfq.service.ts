@@ -21,6 +21,7 @@ export class RFQService {
 
   async createRFQ(
     purchaseRequestId: string,
+    organizationId: string,
     title: string,
     description?: string
   ): Promise<RFQResponse> {
@@ -36,6 +37,7 @@ export class RFQService {
       const rfqNumber = `RFQ-${year}-${String(nextNumber).padStart(4, "0")}`
 
       const rfqData: InsertRfq = {
+        organizationId,
         rfqNumber,
         purchaseRequestId,
         title,
