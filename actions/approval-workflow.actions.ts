@@ -247,6 +247,7 @@ export async function approveRequest(
             )
           )
           .limit(1)
+          console.log({procurementManagers})
 
         if (procurementManagers.length > 0) {
           await tx.insert(schema.procurementAssignments).values({
