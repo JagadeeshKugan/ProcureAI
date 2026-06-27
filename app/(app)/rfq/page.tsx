@@ -210,7 +210,7 @@ export default function RfqPage() {
                       })}
                     </TableCell>
                     <TableCell>
-                      <Button
+                      {rfq.vendorsResponded > 0 && <Button
                         variant="outline"
                         size="sm"
                         render={<Link href={`/rfq/${rfq.id}`} />}
@@ -219,7 +219,7 @@ export default function RfqPage() {
                       >
                         <Sparkles data-icon="inline-start" />
                         Compare
-                      </Button>
+                      </Button>}
                     </TableCell>
                   </TableRow>
                 ))}
