@@ -231,6 +231,10 @@ export async function updatePOStatus(
       return { success: false, error: "User not found in database" }
     }
 
+    if(!organizationUId){
+      return { success: false, error: "Organization not found in database" }
+    }
+
     await db.transaction(async (tx) => {
       await tx
         .update(schema.purchaseOrders)
@@ -238,13 +242,13 @@ export async function updatePOStatus(
         .where(
           and(
             eq(schema.purchaseOrders.id, poId),
-            eq(schema.purchaseOrders.organizationId, organizationUId!)
+            eq(schema.purchaseOrders.organizationId, organizationUId)
           )
         )
 
       // Create audit log
       await tx.insert(schema.auditLogs).values({
-        organizationId,
+        organizationId:organizationUId,
         action: "STATUS_CHANGED",
         entityType: "purchase_order",
         entityId: poId,
