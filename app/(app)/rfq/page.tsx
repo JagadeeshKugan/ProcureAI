@@ -200,7 +200,7 @@ export default function RfqPage() {
                         : "Not set"}
                     </TableCell>
                     <TableCell>
-                      <StatusBadge status={rfq.status} />
+                      <StatusBadge status={rfq.status ?? '-'} />
                     </TableCell>
                     <TableCell className="text-right text-sm text-muted-foreground">
                       {new Date(rfq.createdAt).toLocaleDateString("en-US", {
