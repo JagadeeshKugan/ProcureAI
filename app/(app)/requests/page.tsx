@@ -117,7 +117,7 @@ export default function RequestsPage() {
         requester: "System User",
         department: r.department || "Engineering",
         budget: Number(r.estimatedTotal) || 0,
-        status: (r.status === "draft" ? "Draft" : r.status === "pending_approval" ? "Pending Approval" : r.status === "approved" ? "Approved" : "In RFQ") as PurchaseRequest["status"],
+        status: (r.status === "draft" ? "Draft" : r.status === "pending_approval" ? "Pending Approval" : r.status === "approved" ? "Approved" : r.status === 'procurement_review' ? "Procurement review": "In RFQ") as PurchaseRequest["status"],
         category: "Equipment",
         createdDate: r.createdAt?.toLocaleDateString(),
         requiredDate: new Date().toLocaleDateString(),

@@ -124,7 +124,7 @@ export function WorkQueue({ items, isLoading = false }: WorkQueueProps) {
                 </TableCell>
                 <TableCell className="text-right">
                   <Button size="sm" variant="ghost">
-                    <Link href={`/procurement/${item.type}/${item.id}`} className="flex items-center gap-2">
+                    <Link href={`/procurement/${item.id}`} className="flex items-center gap-2">
                       View
                     </Link>
                   </Button>

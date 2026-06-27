@@ -23,7 +23,13 @@ export class RFQService {
     purchaseRequestId: string,
     organizationId: string,
     title: string,
-    description?: string
+    createdBy: string,
+    description?: string,
+  specifications?: string,
+  dueDate?: Date,
+  expectedDeliveryDate?: Date,
+  termsAndConditions?: string,
+  notes?: string,
   ): Promise<RFQResponse> {
     try {
       // Generate RFQ number
@@ -37,12 +43,18 @@ export class RFQService {
       const rfqNumber = `RFQ-${year}-${String(nextNumber).padStart(4, "0")}`
 
       const rfqData: InsertRfq = {
-        organizationId,
-        rfqNumber,
-        purchaseRequestId,
-        title,
-        description,
-        status: "draft",
+          organizationId,
+  rfqNumber,
+  purchaseRequestId,
+  title,
+  description,
+  specifications,
+  dueDate,
+  expectedDeliveryDate,
+  termsAndConditions,
+  notes,
+  createdBy,
+  status: "draft",
       }
 
       const result = await this.db.insert(schema.rfqs).values(rfqData).returning()

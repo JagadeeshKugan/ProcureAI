@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { Search, MessageSquare } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Search, MessageSquare, Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import { getVendorQuotations } from "@/actions/vendor.actions"
 
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -17,47 +19,46 @@ import {
 } from "@/components/ui/table"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 
-const mockQuotes = [
-  {
-    id: "QT-2024-001",
-    rfqId: "RFQ-2024-001",
-    title: "Industrial Sensors - Batch Purchase",
-    amount: "$45,000",
-    status: "Submitted",
-    updatedAt: "2024-02-08",
-  },
-  {
-    id: "QT-2024-002",
-    rfqId: "RFQ-2024-002",
-    title: "Custom Bracket Assembly",
-    amount: "$28,500",
-    status: "Accepted",
-    updatedAt: "2024-02-05",
-  },
-  {
-    id: "QT-2024-003",
-    rfqId: "RFQ-2024-003",
-    title: "Hydraulic Components",
-    amount: "$12,300",
-    status: "Rejected",
-    updatedAt: "2024-02-02",
-  },
-  {
-    id: "QT-2024-004",
-    rfqId: "RFQ-2024-004",
-    title: "Stainless Steel Fasteners",
-    amount: "$8,750",
-    status: "Submitted",
-    updatedAt: "2024-02-01",
-  },
-]
+interface Quotation {
+  id: string
+  rfqId: string
+  rfqNumber: string
+  rfqTitle: string
+  price: string
+  deliveryDays: number
+  warranty: string | null
+  status: string | null
+  submittedAt: Date
+}
 
 export default function VendorQuotesPage() {
   const [search, setSearch] = useState("")
+  const [quotations, setQuotations] = useState<Quotation[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filtered = mockQuotes.filter((quote) =>
-    quote.title.toLowerCase().includes(search.toLowerCase()) ||
-    quote.rfqId.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    const fetchQuotations = async () => {
+      try {
+        const result = await getVendorQuotations()
+        if (result.success) {
+          setQuotations(result.data || [])
+        } else {
+          toast.error(result.error || "Failed to load quotations")
+        }
+      } catch (error) {
+        console.error("Error fetching quotations:", error)
+        toast.error("Failed to load quotations")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchQuotations()
+  }, [])
+
+  const filtered = quotations.filter((quote) =>
+    quote.rfqTitle.toLowerCase().includes(search.toLowerCase()) ||
+    quote.rfqNumber.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -84,7 +85,11 @@ export default function VendorQuotesPage() {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : filtered.length === 0 ? (
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -100,12 +105,12 @@ export default function VendorQuotesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Quote ID</TableHead>
-                <TableHead>RFQ ID</TableHead>
+                <TableHead>RFQ Number</TableHead>
                 <TableHead>Title</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead>Delivery (days)</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableHead>Submitted</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -113,32 +118,35 @@ export default function VendorQuotesPage() {
               {filtered.map((quote) => (
                 <TableRow key={quote.id}>
                   <TableCell className="font-mono text-xs font-medium">
-                    {quote.id}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {quote.rfqId}
+                    {quote.rfqNumber}
                   </TableCell>
                   <TableCell className="max-w-[280px]">
-                    <span className="line-clamp-1">{quote.title}</span>
+                    <span className="line-clamp-1">{quote.rfqTitle}</span>
                   </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
-                    {quote.amount}
+                    ${parseFloat(quote.price).toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </TableCell>
+                  <TableCell className="text-sm tabular-nums">
+                    {quote.deliveryDays}
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        quote.status === "Accepted"
+                        quote.status === "accepted"
                           ? "default"
-                          : quote.status === "Submitted"
+                          : quote.status === "submitted"
                             ? "secondary"
                             : "outline"
                       }
                     >
-                      {quote.status}
+                      {quote.status || "unknown"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(quote.updatedAt).toLocaleDateString("en-US", {
+                    {new Date(quote.submittedAt).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",

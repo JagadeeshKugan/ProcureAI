@@ -212,11 +212,22 @@ export const rfqs = pgTable(
       .references(() => organizations.id, { onDelete: "cascade" }),
     rfqNumber: varchar("rfq_number", { length: 50 }).unique().notNull(),
     purchaseRequestId: uuid("purchase_request_id")
-      .notNull()
-      .references(() => purchaseRequests.id, { onDelete: "cascade" }),
+      .references(() => purchaseRequests.id, { onDelete: "set null" }),
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
-    status: varchar("status", { length: 50 }).default("draft"), // 'draft', 'sent', 'responses_received', 'evaluation', 'awarded'
+    specifications: text("specifications"), // Long text or JSON for technical requirements
+    dueDate: timestamp("due_date"),
+    expectedDeliveryDate: timestamp("expected_delivery_date"),
+    termsAndConditions: text("terms_and_conditions"),
+    notes: text("notes"),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    publishedAt: timestamp("published_at"),
+    selectedVendorId: uuid("selected_vendor_id")
+      .references(() => users.id, { onDelete: "set null" }),
+    aiRecommendation: jsonb("ai_recommendation"), // Optional AI recommendations in JSON
+    status: varchar("status", { length: 50 }).default("draft"), // 'draft', 'open', 'closed', 'awarded', 'cancelled'
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -226,6 +237,8 @@ export const rfqs = pgTable(
   (table) => ({
     rfqNumberIdx: uniqueIndex("rfq_number_idx").on(table.rfqNumber),
     orgIdIdx: index("rfq_org_idx").on(table.organizationId),
+    createdByIdx: index("rfq_created_by_idx").on(table.createdBy),
+    selectedVendorIdx: index("rfq_selected_vendor_idx").on(table.selectedVendorId),
   })
 )
 
@@ -476,6 +489,8 @@ export const rfqVendors = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
     invitedAt: timestamp("invited_at").defaultNow().notNull(),
+    viewedAt: timestamp("viewed_at"), // When vendor first viewed the RFQ
+    submittedAt: timestamp("submitted_at"), // When vendor submitted quotation
     status: varchar("status", { length: 20 }).default("invited"), // 'invited', 'quote_sent', 'quote_received', 'rejected'
     reminderSentAt: timestamp("reminder_sent_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -489,4 +504,65 @@ export const rfqVendors = pgTable(
 
 export type InsertRFQVendor = typeof rfqVendors.$inferInsert
 export type SelectRFQVendor = typeof rfqVendors.$inferSelect
+
+// RFQ Items table - Line items in an RFQ (typically from purchase request)
+export const rfqItems = pgTable(
+  "rfq_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    rfqId: uuid("rfq_id")
+      .notNull()
+      .references(() => rfqs.id, { onDelete: "cascade" }),
+    lineNumber: integer("line_number").notNull(),
+    itemName: varchar("item_name", { length: 255 }).notNull(),
+    quantity: numeric("quantity", { precision: 12, scale: 2 }).notNull(),
+    unit: varchar("unit", { length: 50 }), // e.g., 'pcs', 'kg', 'meters'
+    specifications: text("specifications"), // Optional specifications for this item
+    estimatedPrice: numeric("estimated_price", { precision: 12, scale: 2 }), // Estimated unit price
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    rfqIdIdx: index("rfq_items_rfq_idx").on(table.rfqId),
+  })
+)
+
+export type InsertRFQItem = typeof rfqItems.$inferInsert
+export type SelectRFQItem = typeof rfqItems.$inferSelect
+
+// Quotations table - Vendor quotes submitted for RFQs
+export const quotations = pgTable(
+  "quotations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    rfqId: uuid("rfq_id")
+      .notNull()
+      .references(() => rfqs.id, { onDelete: "cascade" }),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    price: numeric("price", { precision: 12, scale: 2 }).notNull(),
+    deliveryDays: integer("delivery_days").notNull(),
+    warranty: varchar("warranty", { length: 255 }),
+    notes: text("notes"),
+    status: varchar("status", { length: 20 }).default("submitted"), // 'submitted', 'accepted', 'rejected'
+    submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    rfqIdIdx: index("quotations_rfq_idx").on(table.rfqId),
+    vendorIdIdx: index("quotations_vendor_idx").on(table.vendorId),
+    rfqVendorUniqueIdx: uniqueIndex("quotations_unique_idx").on(table.rfqId, table.vendorId),
+  })
+)
+
+export type InsertQuotation = typeof quotations.$inferInsert
+export type SelectQuotation = typeof quotations.$inferSelect
 

@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Upload } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { getVendorRFQDetail, submitQuotation } from "@/actions/vendor.actions"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -16,32 +17,28 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 
-// Mock RFQ data
-const mockRFQs: Record<string, any> = {
-  "RFQ-2024-001": {
-    id: "RFQ-2024-001",
-    title: "Industrial Sensors - Batch Purchase",
-    description:
-      "We are seeking reliable industrial temperature and pressure sensors for our manufacturing facility. High precision and durability required.",
-    quantity: 500,
-    deadline: "2024-02-15",
-    attachments: ["Specifications.pdf", "Technical_Requirements.docx"],
-    unit: "pieces",
-  },
-  "RFQ-2024-002": {
-    id: "RFQ-2024-002",
-    title: "Custom Bracket Assembly",
-    description: "Custom stainless steel bracket assembly for automotive applications.",
-    quantity: 1000,
-    deadline: "2024-02-10",
-    attachments: ["CAD_Drawing.pdf"],
-    unit: "units",
-  },
+export interface RFQDetail {
+  id: string
+  title: string
+  description: string | null
+  specifications: string | null
+  dueDate: Date | null
+  expectedDeliveryDate: Date | null
+  termsAndConditions: string | null
+  notes: string | null
+  createdBy: string
+  publishedAt: Date | null
+  selectedVendorId: string | null
+  aiRecommendation: Record<string, any> | null
+  status: string | null
+  createdAt: Date
+  updatedAt: Date | null
 }
 
 export default function RFQDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const rfq = mockRFQs[params.id]
+  const [rfq, setRfq] = useState<RFQDetail | null>(null)
+  const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const [formData, setFormData] = useState({
@@ -50,6 +47,72 @@ export default function RFQDetailPage({ params }: { params: { id: string } }) {
     warranty: "",
     notes: "",
   })
+
+  useEffect(() => {
+    const fetchRFQ = async () => {
+      try {
+        const result = await getVendorRFQDetail(params.id)
+        if (result.success && result.data) {
+          setRfq(result.data as RFQDetail)
+        } else {
+          toast.error(result.error || "Failed to load RFQ")
+        }
+      } catch (error) {
+        console.error("Error fetching RFQ:", error)
+        toast.error("Failed to load RFQ")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRFQ()
+  }, [params.id])
+
+  const handleSubmitQuote = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.price || !formData.deliveryDays) {
+      toast.error("Please fill in all required fields")
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const result = await submitQuotation(
+        params.id,
+        formData.price,
+        parseInt(formData.deliveryDays),
+        formData.warranty || undefined,
+        formData.notes || undefined
+      )
+
+      if (result.success) {
+        setIsSubmitting(false)
+        setHasSubmitted(true)
+        toast.success("Quote submitted successfully!")
+
+        setTimeout(() => {
+          router.push("/vendor/quotes")
+        }, 2000)
+      } else {
+        setIsSubmitting(false)
+        toast.error(result.error || "Failed to submit quote")
+      }
+    } catch (error) {
+      setIsSubmitting(false)
+      console.error("Error submitting quote:", error)
+      toast.error("Failed to submit quote")
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   if (!rfq) {
     return (
@@ -64,32 +127,10 @@ export default function RFQDetailPage({ params }: { params: { id: string } }) {
           Back
         </Button>
         <div className="flex h-96 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-muted-foreground">RFQ not found</p>
+          <p className="text-muted-foreground">RFQ not found or access denied</p>
         </div>
       </div>
     )
-  }
-
-  const handleSubmitQuote = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!formData.price || !formData.deliveryDays) {
-      toast.error("Please fill in all required fields")
-      return
-    }
-
-    setIsSubmitting(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    setIsSubmitting(false)
-    setHasSubmitted(true)
-    toast.success("Quote submitted successfully!")
-
-    setTimeout(() => {
-      router.push("/vendor/quotes")
-    }, 2000)
   }
 
   return (
@@ -108,9 +149,9 @@ export default function RFQDetailPage({ params }: { params: { id: string } }) {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{rfq.title}</h1>
         <div className="mt-2 flex items-center gap-2">
-          <Badge variant="default">{rfq.quantity.toLocaleString()} {rfq.unit}</Badge>
+         
           <span className="text-sm text-muted-foreground">
-            Due: {new Date(rfq.deadline).toLocaleDateString("en-US")}
+            Due: {new Date(rfq.dueDate!).toLocaleDateString("en-US")}
           </span>
         </div>
       </div>
@@ -125,22 +166,6 @@ export default function RFQDetailPage({ params }: { params: { id: string } }) {
             </p>
           </Card>
 
-          {rfq.attachments && rfq.attachments.length > 0 && (
-            <Card className="p-6">
-              <h2 className="font-semibold">Attachments</h2>
-              <div className="mt-4 space-y-2">
-                {rfq.attachments.map((file: string) => (
-                  <div
-                    key={file}
-                    className="flex items-center gap-2 rounded-lg border p-3"
-                  >
-                    <Upload className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{file}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
         </div>
 
         {/* Quote Form */}
@@ -161,7 +186,7 @@ export default function RFQDetailPage({ params }: { params: { id: string } }) {
               <form onSubmit={handleSubmitQuote} className="mt-6 space-y-4">
                 <FieldGroup>
                   <FieldLabel>
-                    Price per {rfq.unit} <span className="text-red-500">*</span>
+                    Price (per Item) <span className="text-red-500">*</span>
                   </FieldLabel>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">

@@ -79,7 +79,7 @@ async function generateApprovalRoute(
   if (amount > 50000) {
     return approverUserIds.slice(0, 3)
   }
-  return approverUserIds.slice(0, 1)
+  return approverUserIds.slice(0, 5)
 }
 
 /**

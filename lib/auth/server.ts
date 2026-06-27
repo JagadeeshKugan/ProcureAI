@@ -24,7 +24,8 @@ export async function syncUserToDatabase() {
         "org:admin": "admin",
         "org:requester": "requester",
         "org:procurement_manager": "procurement_manager",
-        "org:approver": "approver"
+        "org:approver": "approver",
+        "org:vendor" :'vendor'
       }
       return roleMap[role!] || "member"
     }
