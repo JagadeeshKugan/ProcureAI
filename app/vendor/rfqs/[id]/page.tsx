@@ -47,11 +47,12 @@ export default function RFQDetailPage({ params }: { params: { id: string } }) {
     warranty: "",
     notes: "",
   })
-
+console.log(params.id)
   useEffect(() => {
     const fetchRFQ = async () => {
       try {
         const result = await getVendorRFQDetail(params.id)
+        console.log({result})
         if (result.success && result.data) {
           setRfq(result.data as RFQDetail)
         } else {
