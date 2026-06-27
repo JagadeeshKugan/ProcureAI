@@ -73,7 +73,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
 
     // Non-vendor cannot access vendor routes (except admins can manage vendors)
-    if (isVendorRoute(req) && userRole !== "vendor") {
+    if (isVendorRoute(req) && userRole !== "vendor" && userRole !== "admin") {
       console.log("[Middleware] Redirecting non-vendor from vendor route to /dashboard")
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
