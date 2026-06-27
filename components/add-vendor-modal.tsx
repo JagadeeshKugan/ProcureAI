@@ -83,9 +83,6 @@ export function AddVendorModal({ onVendorCreated }: AddVendorModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Add Vendor</Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add New Vendor</DialogTitle>
