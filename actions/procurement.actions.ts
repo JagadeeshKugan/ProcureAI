@@ -259,7 +259,9 @@ export async function bulkAssignRequests(
 }
 
 /**
- * Create RFQ from approved request with vendors or standalone RFQ
+ * Create enterprise-grade RFQ from approved request with vendors or standalone RFQ
+ * Supports dueDate, expectedDeliveryDate, termsAndConditions, notes, specifications
+ * Creates RFQ items from purchase request items if request is provided
  */
 export async function createRFQFromRequest(
   requestId: string,
@@ -269,7 +271,8 @@ export async function createRFQFromRequest(
   notes?: string,
   termsAndConditions?: string,
   expectedDeliveryDate?: string,
-  manualTitle?: string
+  manualTitle?: string,
+  specifications?: string
 ) {
   try {
     const { userId } = await auth()
@@ -291,7 +294,9 @@ export async function createRFQFromRequest(
 
     let rfqTitle = manualTitle || "New RFQ"
     let rfqDescription = notes || ""
-    let purchaseRequestId = requestId
+    let purchaseRequestId: string | null = requestId || null
+    const dueDateParsed = dueDate ? new Date(dueDate) : undefined
+    const expectedDeliveryDateParsed = expectedDeliveryDate ? new Date(expectedDeliveryDate) : undefined
 
     // If requestId is provided, get request details and validate
     if (requestId) {
@@ -309,11 +314,12 @@ export async function createRFQFromRequest(
         return { success: false, error: "Request must be approved before creating RFQ" }
       }
 
-      // Use request details for standalone RFQ creation
+      // Use request details for RFQ
       rfqTitle = manualTitle || request[0].title || 'untitled rfq'
       rfqDescription = rfqDescription || request[0].description || ""
       purchaseRequestId = requestId
     }
+    
     if (!rfqTitle) {
       throw new Error("RFQ title is required")
     }
@@ -329,7 +335,7 @@ export async function createRFQFromRequest(
 
     const rfqNumber = `RFQ-${new Date().getFullYear()}-${String(rfqCount.length + 1).padStart(4, "0")}`
 
-    // Create RFQ
+    // Create RFQ with enterprise fields
     const rfq = await db
       .insert(schema.rfqs)
       .values({
@@ -337,23 +343,53 @@ export async function createRFQFromRequest(
         rfqNumber,
         title: rfqTitle,
         description: rfqDescription,
+        specifications: specifications || null,
+        dueDate: dueDateParsed || null,
+        expectedDeliveryDate: expectedDeliveryDateParsed || null,
+        termsAndConditions: termsAndConditions || null,
+        notes: notes || null,
+        createdBy: userUid,
         purchaseRequestId: purchaseRequestId,
         status: "draft",
       })
       .returning()
 
-    // Add vendors to RFQ
+    // Load and create RFQ items from purchase request if request exists
+    if (requestId && purchaseRequestId) {
+      const requestItems = await db
+        .select()
+        .from(schema.purchaseRequestItems)
+        .where(eq(schema.purchaseRequestItems.purchaseRequestId, requestId))
+        .orderBy(schema.purchaseRequestItems.lineNumber)
+
+      if (requestItems.length > 0) {
+        const rfqItemValues = requestItems.map((item) => ({
+          rfqId: rfq[0].id,
+          lineNumber: item.lineNumber,
+          itemName: item.itemName,
+          quantity: item.quantity,
+          unit: item.unitOfMeasure || null,
+          specifications: item.specifications ? JSON.stringify(item.specifications) : null,
+          estimatedPrice: item.estimatedUnitPrice || null,
+        }))
+
+        await db.insert(schema.rfqItems).values(rfqItemValues)
+      }
+    }
+
+    // Add vendors to RFQ with invitation timestamp
     if (vendorIds.length > 0) {
       const rfqVendorValues = vendorIds.map((vendorId) => ({
         rfqId: rfq[0].id,
         vendorId,
         status: "invited" as const,
+        invitedAt: new Date(),
       }))
 
       await db.insert(schema.rfqVendors).values(rfqVendorValues)
     }
 
-    // Create audit log
+    // Create detailed audit log with enhanced metadata
     const auditRepo = new AuditLogRepository()
     await auditRepo.create({
       organizationId,
@@ -366,13 +402,20 @@ export async function createRFQFromRequest(
         rfqNumber,
         rfqTitle,
         vendorCount: vendorIds.length,
-        dueDate,
-        expectedDeliveryDate,
+        dueDate: dueDate || null,
+        expectedDeliveryDate: expectedDeliveryDate || null,
+        hasTermsAndConditions: !!termsAndConditions,
+        hasSpecifications: !!specifications,
         standalone: !requestId,
       },
     })
 
-    console.log("[createRFQFromRequest] RFQ created:", { rfqNumber, vendorCount: vendorIds.length, standalone: !requestId })
+    console.log("[createRFQFromRequest] Enterprise RFQ created:", { 
+      rfqNumber, 
+      vendorCount: vendorIds.length, 
+      standalone: !requestId,
+      itemsCount: requestId ? (await db.select().from(schema.rfqItems).where(eq(schema.rfqItems.rfqId, rfq[0].id))).length : 0
+    })
 
     return { success: true, data: rfq[0], rfqId: rfq[0].id }
   } catch (error) {

@@ -156,22 +156,6 @@ export default function RFQDetailPage({ params }: { params: { id: string } }) {
             </p>
           </Card>
 
-          {rfq.attachments && rfq.attachments.length > 0 && (
-            <Card className="p-6">
-              <h2 className="font-semibold">Attachments</h2>
-              <div className="mt-4 space-y-2">
-                {rfq.attachments.map((file: string) => (
-                  <div
-                    key={file}
-                    className="flex items-center gap-2 rounded-lg border p-3"
-                  >
-                    <Upload className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{file}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
         </div>
 
         {/* Quote Form */}
