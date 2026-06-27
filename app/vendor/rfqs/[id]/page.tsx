@@ -17,12 +17,22 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 
-interface RFQDetail {
+export interface RFQDetail {
   id: string
   title: string
   description: string | null
+  specifications: string | null
+  dueDate: Date | null
+  expectedDeliveryDate: Date | null
+  termsAndConditions: string | null
+  notes: string | null
+  createdBy: string
+  publishedAt: Date | null
+  selectedVendorId: string | null
+  aiRecommendation: Record<string, any> | null
   status: string | null
   createdAt: Date
+  updatedAt: Date | null
 }
 
 export default function RFQDetailPage({ params }: { params: { id: string } }) {
@@ -139,9 +149,9 @@ export default function RFQDetailPage({ params }: { params: { id: string } }) {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{rfq.title}</h1>
         <div className="mt-2 flex items-center gap-2">
-          <Badge variant="default">{rfq.quantity.toLocaleString()} {rfq.unit}</Badge>
+         
           <span className="text-sm text-muted-foreground">
-            Due: {new Date(rfq.deadline).toLocaleDateString("en-US")}
+            Due: {new Date(rfq.dueDate!).toLocaleDateString("en-US")}
           </span>
         </div>
       </div>
@@ -176,7 +186,7 @@ export default function RFQDetailPage({ params }: { params: { id: string } }) {
               <form onSubmit={handleSubmitQuote} className="mt-6 space-y-4">
                 <FieldGroup>
                   <FieldLabel>
-                    Price per {rfq.unit} <span className="text-red-500">*</span>
+                    Price (per Item) <span className="text-red-500">*</span>
                   </FieldLabel>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
