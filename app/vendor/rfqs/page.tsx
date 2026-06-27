@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Search, FileText } from "lucide-react"
+import { Search, FileText, Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import { getVendorRFQs } from "@/actions/vendor.actions"
 
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -18,49 +20,43 @@ import {
 } from "@/components/ui/table"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 
-const mockRFQs = [
-  {
-    id: "RFQ-2024-001",
-    title: "Industrial Sensors - Batch Purchase",
-    deadline: "2024-02-15",
-    status: "Open",
-    quantity: 500,
-  },
-  {
-    id: "RFQ-2024-002",
-    title: "Custom Bracket Assembly",
-    deadline: "2024-02-10",
-    status: "Submitted",
-    quantity: 1000,
-  },
-  {
-    id: "RFQ-2024-003",
-    title: "Hydraulic Components",
-    deadline: "2024-02-20",
-    status: "Open",
-    quantity: 250,
-  },
-  {
-    id: "RFQ-2024-004",
-    title: "Circuit Board Manufacturing",
-    deadline: "2024-02-05",
-    status: "Closed",
-    quantity: 2000,
-  },
-  {
-    id: "RFQ-2024-005",
-    title: "Stainless Steel Fasteners",
-    deadline: "2024-02-18",
-    status: "Open",
-    quantity: 5000,
-  },
-]
+interface RFQ {
+  id: string
+  rfqNumber: string
+  title: string
+  description: string | null
+  status: string | null
+  createdAt: Date
+}
 
 export default function VendorRFQsPage() {
   const [search, setSearch] = useState("")
+  const [rfqs, setRfqs] = useState<RFQ[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filtered = mockRFQs.filter((rfq) =>
-    rfq.title.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    const fetchRFQs = async () => {
+      try {
+        const result = await getVendorRFQs()
+        if (result.success) {
+          setRfqs(result.data || [])
+        } else {
+          toast.error(result.error || "Failed to load RFQs")
+        }
+      } catch (error) {
+        console.error("Error fetching RFQs:", error)
+        toast.error("Failed to load RFQs")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRFQs()
+  }, [])
+
+  const filtered = rfqs.filter((rfq) =>
+    rfq.title.toLowerCase().includes(search.toLowerCase()) ||
+    rfq.rfqNumber.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -87,7 +83,11 @@ export default function VendorRFQsPage() {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : filtered.length === 0 ? (
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -95,7 +95,9 @@ export default function VendorRFQsPage() {
               </EmptyMedia>
               <EmptyTitle>No RFQs found</EmptyTitle>
               <EmptyDescription>
-                Try adjusting your search or check back later for new RFQs.
+                {rfqs.length === 0
+                  ? "You haven't been assigned any RFQs yet."
+                  : "Try adjusting your search or check back later for new RFQs."}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
@@ -103,11 +105,10 @@ export default function VendorRFQsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>RFQ ID</TableHead>
+                <TableHead>RFQ Number</TableHead>
                 <TableHead>Title</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Deadline</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -115,33 +116,30 @@ export default function VendorRFQsPage() {
               {filtered.map((rfq) => (
                 <TableRow key={rfq.id}>
                   <TableCell className="font-mono text-xs font-medium">
-                    {rfq.id}
+                    {rfq.rfqNumber}
                   </TableCell>
                   <TableCell className="max-w-[280px]">
                     <span className="line-clamp-1">{rfq.title}</span>
                   </TableCell>
-                  <TableCell className="text-sm tabular-nums">
-                    {rfq.quantity.toLocaleString()}
+                  <TableCell>
+                    <Badge
+                      variant={
+                        rfq.status === "draft"
+                          ? "secondary"
+                          : rfq.status === "sent"
+                            ? "default"
+                            : "outline"
+                      }
+                    >
+                      {rfq.status || "unknown"}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="text-sm">
-                    {new Date(rfq.deadline).toLocaleDateString("en-US", {
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(rfq.createdAt).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
                     })}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        rfq.status === "Open"
-                          ? "default"
-                          : rfq.status === "Submitted"
-                            ? "secondary"
-                            : "outline"
-                      }
-                    >
-                      {rfq.status}
-                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <Link href={`/vendor/rfqs/${rfq.id}`}>

@@ -490,3 +490,36 @@ export const rfqVendors = pgTable(
 export type InsertRFQVendor = typeof rfqVendors.$inferInsert
 export type SelectRFQVendor = typeof rfqVendors.$inferSelect
 
+// Quotations table - Vendor quotes submitted for RFQs
+export const quotations = pgTable(
+  "quotations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    rfqId: uuid("rfq_id")
+      .notNull()
+      .references(() => rfqs.id, { onDelete: "cascade" }),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    price: numeric("price", { precision: 12, scale: 2 }).notNull(),
+    deliveryDays: integer("delivery_days").notNull(),
+    warranty: varchar("warranty", { length: 255 }),
+    notes: text("notes"),
+    status: varchar("status", { length: 20 }).default("submitted"), // 'submitted', 'accepted', 'rejected'
+    submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    rfqIdIdx: index("quotations_rfq_idx").on(table.rfqId),
+    vendorIdIdx: index("quotations_vendor_idx").on(table.vendorId),
+    rfqVendorUniqueIdx: uniqueIndex("quotations_unique_idx").on(table.rfqId, table.vendorId),
+  })
+)
+
+export type InsertQuotation = typeof quotations.$inferInsert
+export type SelectQuotation = typeof quotations.$inferSelect
+
