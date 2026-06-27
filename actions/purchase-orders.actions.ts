@@ -191,7 +191,7 @@ export async function getPurchaseOrderDetails(poId: string, organizationId: stri
       .where(
         and(
           eq(schema.purchaseOrders.id, poId),
-          eq(schema.purchaseOrders.organizationId, organizationUId)
+          eq(schema.purchaseOrders.organizationId, organizationUId!)
         )
       )
       .limit(1)
