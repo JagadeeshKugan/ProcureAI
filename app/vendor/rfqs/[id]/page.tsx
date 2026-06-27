@@ -22,6 +22,7 @@ import {
 export interface RFQDetail {
   id: string
   title: string
+  rfqNumber: string | null
   description: string | null
   specifications: string | null
   dueDate: Date | null
