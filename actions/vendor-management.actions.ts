@@ -6,12 +6,18 @@ import { eq } from "drizzle-orm"
 
 /**
  * Fetch all vendors (users with role='vendor') from database
+ * Only accessible to admins and procurement managers
  */
 export async function getAllVendors() {
   try {
-    const { userId, orgId } = await auth()
+    const { userId, orgRole } = await auth()
     if (!userId) {
       return { success: false, error: "Not authenticated" }
+    }
+
+    // Check authorization - only admins and procurement managers can view vendors
+    if (!orgRole || !["org:admin", "org:procurement_manager"].includes(orgRole)) {
+      return { success: false, error: "Unauthorized: Only admins and procurement managers can view vendors" }
     }
 
     const db = getDb()

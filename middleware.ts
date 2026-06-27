@@ -66,17 +66,20 @@ export default clerkMiddleware(async (auth, req) => {
       path: req.nextUrl.pathname,
     })
 
-    // Vendor cannot access internal routes
+    // Vendor cannot access internal routes (except they will be redirected by server actions)
     if (isInternalRoute(req) && userRole === "vendor") {
       console.log("[Middleware] Redirecting vendor from internal route to /vendor/dashboard")
       return NextResponse.redirect(new URL("/vendor/dashboard", req.url));
     }
 
-    // Non-vendor cannot access vendor routes
+    // Non-vendor cannot access vendor routes (except admins can manage vendors)
     if (isVendorRoute(req) && userRole !== "vendor") {
       console.log("[Middleware] Redirecting non-vendor from vendor route to /dashboard")
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
+
+    // Allow authenticated users through - further auth checks in server actions/components
+    return NextResponse.next()
 
     return NextResponse.next();
   } catch (error) {
