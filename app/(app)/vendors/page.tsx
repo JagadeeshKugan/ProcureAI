@@ -152,7 +152,7 @@ export default function VendorsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <StatusBadge status={vendor.status} />
+                      <StatusBadge status={vendor.status ?? '-'} />
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(vendor.createdAt).toLocaleDateString("en-US", {
