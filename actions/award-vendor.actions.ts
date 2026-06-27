@@ -142,6 +142,35 @@ export async function awardVendor(rfqId: string, vendorId: string) {
       return { success: false, error: "Failed to create purchase order" }
     }
 
+    // Get RFQ items and create PO items
+    const rfqItems = await db
+      .select()
+      .from(schema.rfqItems)
+      .where(eq(schema.rfqItems.rfqId, rfqId))
+      .orderBy(schema.rfqItems.lineNumber)
+
+    if (rfqItems.length > 0) {
+      const poItemsToInsert = rfqItems.map((item) => {
+        const quantity = parseFloat(item.quantity.toString())
+        const unitPrice = parseFloat(quotation.price.toString()) / rfqItems.length // Distribute total price across items
+        const totalPrice = quantity * unitPrice
+
+        return {
+          purchaseOrderId: po[0].id,
+          lineNumber: item.lineNumber,
+          itemName: item.itemName,
+          description: item.specifications || null,
+          quantity: item.quantity.toString(),
+          unitPrice: unitPrice.toString(),
+          totalPrice: totalPrice.toString(),
+        }
+      })
+
+      await db
+        .insert(schema.purchaseOrderItems)
+        .values(poItemsToInsert)
+    }
+
     // Create audit log
     await auditRepo.create({
       organizationId: rfqData.organizationId,
