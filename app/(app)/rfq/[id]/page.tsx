@@ -265,7 +265,6 @@ export default function QuoteComparisonPage({
       <div className="grid gap-4 lg:grid-cols-3">
         {scored.map((quote, index) => {
           const isRecommended = quote.vendorName === recommended.vendorName
-          const isAwarded = awarded === quote.vendorName
           return (
             <Card
               key={quote.id}
