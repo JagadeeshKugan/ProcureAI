@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { getVendorRFQDetail, submitQuotation } from "@/actions/vendor.actions"
@@ -35,7 +35,7 @@ export interface RFQDetail {
   updatedAt: Date | null
 }
 
-export default function RFQDetailPage({ params }: { params: { id: string } }) {
+export default function RFQDetailPage() {
   const router = useRouter()
   const [rfq, setRfq] = useState<RFQDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -47,11 +47,13 @@ export default function RFQDetailPage({ params }: { params: { id: string } }) {
     warranty: "",
     notes: "",
   })
+  const params = useParams()  
+  const rfqId = params.id as string
 console.log(params.id)
   useEffect(() => {
     const fetchRFQ = async () => {
       try {
-        const result = await getVendorRFQDetail(params.id)
+        const result = await getVendorRFQDetail(rfqId)
         console.log({result})
         if (result.success && result.data) {
           setRfq(result.data as RFQDetail)
@@ -67,7 +69,7 @@ console.log(params.id)
     }
 
     fetchRFQ()
-  }, [params.id])
+  }, [rfqId])
 
   const handleSubmitQuote = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,7 +83,7 @@ console.log(params.id)
 
     try {
       const result = await submitQuotation(
-        params.id,
+        rfqId,
         formData.price,
         parseInt(formData.deliveryDays),
         formData.warranty || undefined,
