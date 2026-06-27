@@ -91,7 +91,6 @@ export async function syncUserToDatabase() {
         name: result[0]?.name,
         role: result[0]?.role,
         organizationId: result[0]?.organizationId,
-        status: result[0]?.status,
       });
       return result[0] || null;
     } else {
