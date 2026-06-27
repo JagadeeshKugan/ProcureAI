@@ -138,3 +138,25 @@ export async function getCurrentUser() {
   }
 }
 
+export async function getVendorCompany() {
+  const { userId } = await auth()
+
+  if (!userId) return null
+
+  const db = getDb()
+
+  const result = await db
+    .select({
+      companyName: schema.organizations.name,
+    })
+    .from(schema.users)
+    .leftJoin(
+      schema.organizations,
+      eq(schema.users.organizationId, schema.organizations.id)
+    )
+    .where(eq(schema.users.clerkId, userId))
+    .limit(1)
+
+  return result[0]?.companyName
+}
+
