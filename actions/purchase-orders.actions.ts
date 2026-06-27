@@ -171,6 +171,57 @@ export async function getPurchaseOrdersByOrganization(organizationId: string) {
   }
 }
 
+export async function getPurchaseOrdersByVendor() {
+  try {
+    const { userId } = await auth()
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const userRepo = new UserRepository()
+    const vendorUser = await userRepo.findByClerkId(userId)
+    
+    if (!vendorUser) {
+      return { success: false, error: "Vendor user not found" }
+    }
+
+    if (vendorUser.role !== "vendor") {
+      return { success: false, error: "Unauthorized: Only vendors can view their orders" }
+    }
+
+    const db = getDb()
+    const orders = await db
+      .select({
+        id: schema.purchaseOrders.id,
+        poNumber: schema.purchaseOrders.poNumber,
+        requestNumber: schema.purchaseRequests.requestNumber,
+        requestTitle: schema.purchaseRequests.title,
+        buyerName: schema.organizations.name,
+        totalAmount: schema.purchaseOrders.totalAmount,
+        currency: schema.purchaseOrders.currency,
+        status: schema.purchaseOrders.status,
+        expectedDelivery: schema.purchaseOrders.expectedDelivery,
+        createdAt: schema.purchaseOrders.createdAt,
+      })
+      .from(schema.purchaseOrders)
+      .leftJoin(
+        schema.purchaseRequests,
+        eq(schema.purchaseOrders.requestId, schema.purchaseRequests.id)
+      )
+      .leftJoin(
+        schema.organizations,
+        eq(schema.purchaseOrders.organizationId, schema.organizations.id)
+      )
+      .where(eq(schema.purchaseOrders.vendorId, vendorUser.id))
+      .orderBy(schema.purchaseOrders.createdAt)
+
+    return { success: true, data: orders }
+  } catch (error) {
+    console.error("[getPurchaseOrdersByVendor Error]", error)
+    return { success: false, error: "Failed to fetch purchase orders" }
+  }
+}
+
 export async function getPurchaseOrderDetails(poId: string, organizationId: string) {
   try {
      const { userId } = await auth()
