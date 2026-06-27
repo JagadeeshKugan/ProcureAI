@@ -3,6 +3,7 @@
 import { use, useState, useEffect } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { useAuth } from "@clerk/nextjs"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -12,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { getRFQWithQuotations } from "@/actions/rfq-fetch.actions"
+import { awardVendor } from "@/actions/award-vendor.actions"
 import {
   ArrowLeft,
   Award,
@@ -70,10 +72,15 @@ export default function QuoteComparisonPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = use(params)
+  const { orgRole } = useAuth()
   const [rfq, setRfq] = useState<RFQDetail | null>(null)
   const [quotations, setQuotations] = useState<Quotation[]>([])
   const [loading, setLoading] = useState(true)
-  const [awarded, setAwarded] = useState<string | null>(null)
+  const [awardingVendorId, setAwardingVendorId] = useState<string | null>(null)
+  const [isAwarding, setIsAwarding] = useState(false)
+
+  const isAuthorized = orgRole && ["org:admin", "org:procurement_manager"].includes(orgRole)
+  const canAward = isAuthorized && rfq && rfq.status !== "awarded" && rfq.status !== "closed"
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,6 +102,42 @@ export default function QuoteComparisonPage({
 
     fetchData()
   }, [id])
+
+  const handleAwardVendor = async (vendorId: string) => {
+    if (!isAuthorized) {
+      toast.error("Unauthorized: Only admins and procurement managers can award vendors")
+      return
+    }
+
+    if (!canAward) {
+      toast.error(`Cannot award vendor: RFQ status is ${rfq?.status || "unknown"}`)
+      return
+    }
+
+    setIsAwarding(true)
+    setAwardingVendorId(vendorId)
+
+    try {
+      const result = await awardVendor(id, vendorId)
+      if (result.success) {
+        toast.success(result.message || "Vendor awarded successfully!")
+        // Reload data
+        const reloadResult = await getRFQWithQuotations(id)
+        if (reloadResult.success && reloadResult.data) {
+          setRfq(reloadResult.data.rfq as RFQDetail)
+          setQuotations((reloadResult.data.quotations || []) as Quotation[])
+        }
+      } else {
+        toast.error(result.error || "Failed to award vendor")
+      }
+    } catch (error) {
+      console.error("[handleAwardVendor] Error:", error)
+      toast.error("An error occurred while awarding the vendor")
+    } finally {
+      setIsAwarding(false)
+      setAwardingVendorId(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -153,11 +196,26 @@ export default function QuoteComparisonPage({
                 </div>
               </div>
             <Button
-              onClick={() => setAwarded(recommended.vendorName || "")}
-              disabled={awarded === recommended.vendorName}
+              onClick={() => handleAwardVendor(recommended.vendorId)}
+              disabled={!canAward || isAwarding || awardingVendorId === recommended.vendorId}
+              className="gap-2"
             >
-              <Award data-icon="inline-start" />
-              {awarded === recommended.vendorName ? "Awarded" : "Award to " + (recommended.vendorName?.split(" ")[0] || "Vendor")}
+              {isAwarding && awardingVendorId === recommended.vendorId ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Awarding...
+                </>
+              ) : rfq?.status === "awarded" ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Awarded
+                </>
+              ) : (
+                <>
+                  <Award className="h-4 w-4" />
+                  Award Vendor
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -277,17 +335,25 @@ export default function QuoteComparisonPage({
                   </div>
                   <Button
                     variant={isRecommended ? "default" : "outline"}
-                    className="w-full"
-                    onClick={() => setAwarded(quote.vendorName || "")}
-                    disabled={isAwarded}
+                    className="w-full gap-2"
+                    onClick={() => handleAwardVendor(quote.vendorId)}
+                    disabled={!canAward || isAwarding || awardingVendorId === quote.vendorId}
                   >
-                    {isAwarded ? (
+                    {isAwarding && awardingVendorId === quote.vendorId ? (
                       <>
-                        <Check data-icon="inline-start" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Awarding...
+                      </>
+                    ) : rfq?.status === "awarded" ? (
+                      <>
+                        <Check className="h-4 w-4" />
                         Awarded
                       </>
                     ) : (
-                      "Award Contract"
+                      <>
+                        <Award className="h-4 w-4" />
+                        Award Vendor
+                      </>
                     )}
                   </Button>
                 </div>
