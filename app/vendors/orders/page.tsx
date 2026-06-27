@@ -148,7 +148,7 @@ export default function VendorOrdersPage() {
                       {formatCurrency(order.totalAmount)}
                     </TableCell>
                     <TableCell>
-                      <StatusBadge status={order.status} />
+                      <StatusBadge status={order.status ?? "pending"} />
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {order.expectedDelivery
