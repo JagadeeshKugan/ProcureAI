@@ -10,13 +10,16 @@ import { UserRepository } from "@/repositories/user.repository"
 async function generatePONumber(organizationId: string): Promise<string> {
   const db = getDb()
   const year = new Date().getFullYear()
-  
+  const {userId} = await auth();
+  const userRepo = new UserRepository()
+  const appUser = await userRepo.findByClerkId(userId!)
+  const organizationUId = appUser.organizationId;
   const lastPO = await db
     .select({ poNumber: schema.purchaseOrders.poNumber })
     .from(schema.purchaseOrders)
     .where(
       and(
-        eq(schema.purchaseOrders.organizationId, organizationId),
+        eq(schema.purchaseOrders.organizationId, organizationUId!),
         eq(schema.purchaseOrders.status, "DRAFT")
       )
     )
@@ -135,7 +138,10 @@ export async function createPurchaseOrder(
 export async function getPurchaseOrdersByOrganization(organizationId: string) {
   try {
     const db = getDb()
-
+    const {userId} = await auth();
+       const userRepo = new UserRepository()
+    const appUser = await userRepo.findByClerkId(userId!)
+    const organizationUId = appUser.organizationId;
     const orders = await db
       .select({
         id: schema.purchaseOrders.id,
@@ -155,7 +161,7 @@ export async function getPurchaseOrdersByOrganization(organizationId: string) {
         eq(schema.purchaseOrders.requestId, schema.purchaseRequests.id)
       )
       .leftJoin(schema.users, eq(schema.purchaseOrders.vendorId, schema.users.id))
-      .where(eq(schema.purchaseOrders.organizationId, organizationId))
+      .where(eq(schema.purchaseOrders.organizationId, organizationUId!))
       .orderBy(schema.purchaseOrders.createdAt)
 
     return { success: true, data: orders }
@@ -167,15 +173,25 @@ export async function getPurchaseOrdersByOrganization(organizationId: string) {
 
 export async function getPurchaseOrderDetails(poId: string, organizationId: string) {
   try {
-    const db = getDb()
+     const { userId } = await auth()
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
 
+    const db = getDb()
+    const userRepo = new UserRepository()
+    const appUser = await userRepo.findByClerkId(userId)
+    const organizationUId = appUser.organizationId;
+    if (!appUser) {
+      return { success: false, error: "User not found in database" }
+    }
     const po = await db
       .select()
       .from(schema.purchaseOrders)
       .where(
         and(
           eq(schema.purchaseOrders.id, poId),
-          eq(schema.purchaseOrders.organizationId, organizationId)
+          eq(schema.purchaseOrders.organizationId, organizationUId)
         )
       )
       .limit(1)
@@ -210,7 +226,7 @@ export async function updatePOStatus(
     const db = getDb()
     const userRepo = new UserRepository()
     const appUser = await userRepo.findByClerkId(userId)
-
+    const organizationUId = appUser.organizationId;
     if (!appUser) {
       return { success: false, error: "User not found in database" }
     }
@@ -222,7 +238,7 @@ export async function updatePOStatus(
         .where(
           and(
             eq(schema.purchaseOrders.id, poId),
-            eq(schema.purchaseOrders.organizationId, organizationId)
+            eq(schema.purchaseOrders.organizationId, organizationUId!)
           )
         )
 
