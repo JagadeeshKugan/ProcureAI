@@ -110,7 +110,7 @@ export default function CopilotPage() {
           className="gap-2"
         >
           <Plus className="h-4 w-4" />
-          Create with AI
+          Create Request with AI
         </Button>
       </PageHeader>
 

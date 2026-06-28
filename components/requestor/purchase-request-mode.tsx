@@ -144,7 +144,7 @@ export function PurchaseRequestMode({ onSubmit, isLoading = false }: PurchaseReq
       </DialogTitle>
     </DialogHeader>
 
-    <pre>
+    <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-md bg-muted p-4 text-sm">
       {JSON.stringify(formValues, null, 2)}
     </pre>
 
