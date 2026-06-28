@@ -39,7 +39,7 @@ const quickActions = [
   {
     title: "Compare Quotes",
     desc: "Analyze supplier quotations",
-    href: "/compare",
+    href: "/purchase-orders",
     icon: GitCompareArrows,
   },
 ]

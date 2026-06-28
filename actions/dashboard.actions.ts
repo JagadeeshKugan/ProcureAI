@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server"
 import { DashboardService } from "@/services/dashboard.service"
 import { getOrganizationIdFromClerk } from "@/actions/request-detail.actions"
+import { OrganizationRepository } from "@/repositories/organization.repository"
 
 export async function getDashboardMetrics() {
   try {
@@ -15,9 +16,11 @@ export async function getDashboardMetrics() {
         data: null,
       }
     }
-
+    const orgRepo = new OrganizationRepository();
+    const org = await orgRepo.findByClerkOrgId(orgId);
+    const orgUid =  org.id!;
     const dashboardService = new DashboardService()
-    const metrics = await dashboardService.getOrganizationMetrics(orgId)
+    const metrics = await dashboardService.getOrganizationMetrics(orgUid)
 
     return {
       success: true,
