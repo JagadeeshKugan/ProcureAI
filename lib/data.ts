@@ -158,22 +158,9 @@ export const purchaseRequests: PurchaseRequest[] = [
       { name: "team-headcount-q3.xlsx", size: "62 KB" },
     ],
   },
+ 
   {
     id: "pr-2",
-    title: "Annual Adobe Creative Cloud Renewal (85 seats)",
-    department: "Marketing",
-    budget: 51000,
-    status: "Pending Approval",
-    createdDate: "2026-06-02",
-    requiredDate: "2026-06-30",
-    requester: "Marcus Webb",
-    category: "Software Licenses",
-    businessNeed:
-      "Renewal of Adobe Creative Cloud enterprise agreement covering the brand, content, and design teams. Includes negotiated volume discount and shared cloud storage upgrade.",
-    attachments: [{ name: "adobe-quote-2026.pdf", size: "180 KB" }],
-  },
-  {
-    id: "pr-3",
     title: "Ergonomic Standing Desks — HQ Floor 4",
     department: "Facilities",
     budget: 96000,
@@ -189,22 +176,9 @@ export const purchaseRequests: PurchaseRequest[] = [
       { name: "ergonomics-policy.pdf", size: "94 KB" },
     ],
   },
+  
   {
-    id: "pr-4",
-    title: "Core Network Switch Upgrade (Datacenter East)",
-    department: "IT Infrastructure",
-    budget: 312000,
-    status: "Pending Approval",
-    createdDate: "2026-06-05",
-    requiredDate: "2026-09-10",
-    requester: "David Chen",
-    category: "Networking",
-    businessNeed:
-      "Replace end-of-life Catalyst switches with 400G-capable hardware to remove the throughput bottleneck affecting storage replication and customer-facing latency.",
-    attachments: [{ name: "network-topology.pdf", size: "520 KB" }],
-  },
-  {
-    id: "pr-5",
+    id: "pr-3",
     title: "Industrial CNC Tooling — Plant 2",
     department: "Manufacturing",
     budget: 188000,
@@ -218,7 +192,7 @@ export const purchaseRequests: PurchaseRequest[] = [
     attachments: [],
   },
   {
-    id: "pr-6",
+    id: "pr-4",
     title: "Datadog Observability Platform (Pro Tier)",
     department: "Engineering",
     budget: 144000,
@@ -229,35 +203,7 @@ export const purchaseRequests: PurchaseRequest[] = [
     category: "Software Licenses",
     businessNeed:
       "Consolidate fragmented monitoring tools into a single observability platform covering APM, logs, and infrastructure metrics across 600+ hosts.",
-    attachments: [{ name: "tooling-comparison.pdf", size: "310 KB" }],
-  },
-  {
-    id: "pr-7",
-    title: "Fleet of 25 Logistics Tablets (Rugged)",
-    department: "Operations",
-    budget: 42500,
-    status: "Rejected",
-    createdDate: "2026-05-30",
-    requiredDate: "2026-07-20",
-    requester: "James Okafor",
-    category: "IT Hardware",
-    businessNeed:
-      "Rugged tablets for warehouse scanning and last-mile delivery confirmation. Rejected pending consolidation with the broader mobility refresh program.",
-    attachments: [{ name: "rugged-device-specs.pdf", size: "210 KB" }],
-  },
-  {
-    id: "pr-8",
-    title: "Raw Aluminium Stock — Q3 Supply",
-    department: "Manufacturing",
-    budget: 420000,
-    status: "In RFQ",
-    createdDate: "2026-06-01",
-    requiredDate: "2026-07-25",
-    requester: "Sofia Almeida",
-    category: "Manufacturing",
-    businessNeed:
-      "Quarterly supply of 6061-T6 aluminium billet for the machining line. Hedging against commodity price volatility with a fixed-price quarterly agreement.",
-    attachments: [{ name: "material-grade-cert.pdf", size: "88 KB" }],
+    attachments: [],
   },
 ]
 
@@ -332,30 +278,9 @@ export const vendors: Vendor[] = [
       { name: "Sustainability Report", type: "Compliance", date: "2025-02-22" },
     ],
   },
+  
   {
     id: "v-4",
-    name: "Lenovo Group",
-    category: "IT Hardware",
-    rating: 4.3,
-    leadTime: "2-3 weeks",
-    performanceScore: 85,
-    aiScore: 88,
-    status: "Active",
-    location: "Morrisville, NC",
-    contact: {
-      name: "Wei Zhang",
-      email: "wzhang@lenovo.com",
-      phone: "+1 (919) 555-0167",
-    },
-    spend: 620000,
-    orders: 38,
-    onTimeDelivery: 91,
-    documents: [
-      { name: "Reseller Agreement", type: "Contract", date: "2025-03-11" },
-    ],
-  },
-  {
-    id: "v-5",
     name: "HP Enterprise",
     category: "IT Hardware",
     rating: 4.1,

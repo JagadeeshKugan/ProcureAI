@@ -9,7 +9,7 @@ When given a natural language description, extract and return a JSON object with
 - title: A concise title for the purchase request
 - description: A detailed description of what's being requested
 - priority: Priority level (low, medium, high, critical)
-- department: Department making the request (if mentioned, otherwise "General")
+- department: Department making the request (if mentioned choose from Engineering, Marketing, Finanance, Sales, HR, IT, Legal, Furniture , otherwise "General")
 - budget: Estimated budget in rupees (extract number only)
 - quantity: Quantity requested (extract number only)
 - category: Category of the item (e.g., IT Hardware, Office Supplies, Furniture, etc.)
