@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useAuth } from "@clerk/nextjs"
-import { CreateRequestForm } from "./create-request-form"
+import { PurchaseRequestMode } from "./purchase-request-mode"
 import { RequestTable } from "./request-table"
 import { RequestDetail } from "./request-detail"
 import { ActivityTimeline } from "./activity-timeline"
@@ -72,7 +72,7 @@ export function DepartmentRequestorClient({
 
   return (
     <>
-      <CreateRequestForm onSubmit={handleCreateRequest} isLoading={isLoading} />
+      <PurchaseRequestMode onSubmit={handleCreateRequest} isLoading={isLoading} />
 
       {selectedRequest ? (
         <div className="space-y-4">
