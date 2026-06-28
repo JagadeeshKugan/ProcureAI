@@ -47,7 +47,13 @@ export function PurchaseRequestMode({ onSubmit, isLoading = false }: PurchaseReq
       <Card className="p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="text-sm font-medium">Mode</div>
-          <ToggleGroup type="single" value={mode} onValueChange={(value) => setMode(value as Mode)}>
+          <ToggleGroup value={[mode]} onValueChange={(values) => {
+    const value = values[0]
+
+    if (value === "manual" || value === "ai") {
+      setMode(value)
+    }
+  }}>
             <ToggleGroupItem value="manual" className="flex-1">
               Manual Form
             </ToggleGroupItem>
