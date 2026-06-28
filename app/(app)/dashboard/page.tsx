@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/data"
 import { getDashboardMetrics } from "@/actions/dashboard.actions"
-import { useAuth } from "@clerk/nextjs"
+import { auth } from "@clerk/nextjs/server"
 
 const quickActions = [
   {
@@ -90,8 +90,8 @@ async function DashboardMetrics() {
   )
 }
 
-export default function DashboardPage() {
-  const { orgId, orgRole } = useAuth()
+export default async function DashboardPage() {
+  const { orgId, orgRole } = await auth()
 
   return (
     <>
