@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@clerk/nextjs"
+import { redirect } from "next/navigation"
 import {
   ArrowLeft,
   Save,
@@ -63,6 +65,13 @@ interface FormData {
 
 export default function CreateRequestPage() {
   const router = useRouter()
+  const { orgRole } = useAuth()
+
+  // Check authorization - only org:admin and org:requester
+  if (orgRole && !["org:admin", "org:requester"].includes(orgRole)) {
+    redirect("/access-denied")
+  }
+
   const [isSaving, setIsSaving] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [formData, setFormData] = React.useState<FormData>({
