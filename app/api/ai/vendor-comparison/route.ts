@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const model = client.getGenerativeModel({ model: "gemini-1.5-flash" })
+    const model = client.getGenerativeModel({ model: "gemini-2.5-flash" })
 
     const quotationsText = quotations
       .map(
