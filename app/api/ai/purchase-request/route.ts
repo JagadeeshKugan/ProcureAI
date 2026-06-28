@@ -15,7 +15,8 @@ When given a natural language description, extract and return a JSON object with
 - category: Category of the item (e.g., IT Hardware, Office Supplies, Furniture, etc.)
 
 Return ONLY valid JSON, no additional text. If a field cannot be determined, use null.
-
+Return ONLY raw JSON.
+Do not use markdown.
 Example input: "Need 25 Dell laptops for the development team by August. Budget ₹20 lakhs."
 Example output: {"title":"Dell Laptops for Development Team","description":"25 Dell laptops needed for development team deployment by August","priority":"high","department":"Development","budget":2000000,"quantity":25,"category":"IT Hardware"}`
 
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call Google Generative AI
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
     const result = await model.generateContent({
       contents: [
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       generationConfig: {
-        temperature: 0.7,
+        temperature: 0.2,
         topK: 40,
         topP: 0.95,
         maxOutputTokens: 1024,
