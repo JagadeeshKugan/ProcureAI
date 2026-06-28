@@ -52,7 +52,7 @@ export function CommandPalette({
     },
     [onOpenChange, router],
   )
-
+   console.log("opened")
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput placeholder="Search pages, actions, vendors..." />
