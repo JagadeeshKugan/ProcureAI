@@ -21,6 +21,9 @@ export async function getFinancePendingApprovals(organizationId: string) {
     if (!userId) {
       return { success: false, error: "Not authenticated" }
     }
+     const userRepo  = new UserRepository();
+    const user = await userRepo.findByClerkId(userId!)
+    const organizationUId = user.organizationId;
 
     const db = getDb()
     
@@ -53,7 +56,7 @@ export async function getFinancePendingApprovals(organizationId: string) {
       )
       .where(
         and(
-          eq(schema.financeApprovals.organizationId, organizationId),
+          eq(schema.financeApprovals.organizationId, organizationUId!),
           eq(schema.financeApprovals.status, "PENDING")
         )
       )
