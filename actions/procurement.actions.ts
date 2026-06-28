@@ -42,7 +42,7 @@ export async function getProcurementDashboard(organizationId: string) {
     if (!approvedRequests.success) {
       return approvedRequests
     }
-    console.log({ approvedRequests })
+
     // Get active RFQs - filter by organization and status
     const rfqs = await db
       .select()

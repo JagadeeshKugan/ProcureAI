@@ -127,7 +127,7 @@ export default function ProcurementOfficerDashboard() {
         const result = await getProcurementDashboard(orgIdResult.organizationId)
         if (result.success && result.data) {
           setDashboardData(result.data)
-           console.log({result})
+
           // Update stats with real data
           setWorkQueueStats({
             pendingRequests: result.data.metrics.approvedRequests,
@@ -183,12 +183,7 @@ export default function ProcurementOfficerDashboard() {
       </div>
 
       {/* RFQ Management - Full Width */}
-      <Suspense fallback={<RFQManagement rfqs={mockRFQs} isLoading />}>
-        <RFQManagement 
-          rfqs={dashboardData?.rfqs || mockRFQs}
-          isLoading={loading}
-        />
-      </Suspense>
+
     </>
   )
 }

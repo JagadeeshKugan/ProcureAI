@@ -432,7 +432,7 @@ export default function CreateRequestPage() {
           </Card>
 
           {/* File Attachments */}
-          <Card>
+         { /* <Card>
             <CardHeader>
               <CardTitle>Attachments</CardTitle>
               <CardDescription>
@@ -481,7 +481,7 @@ export default function CreateRequestPage() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </Card>*/}
         </div>
 
         {/* Sidebar Summary */}
