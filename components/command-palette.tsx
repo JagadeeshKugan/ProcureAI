@@ -53,6 +53,9 @@ export function CommandPalette({
     [onOpenChange, router],
   )
    console.log("opened")
+   if(open){
+    return <div>USer search</div>
+   }
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput placeholder="Search pages, actions, vendors..." />
