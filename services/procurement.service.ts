@@ -6,6 +6,8 @@ import {
   InsertProcurementAssignment,
   InsertVendorSelection,
 } from "@/db/schema"
+import { getDb, schema } from "@/db"
+import { eq } from "drizzle-orm"
 
 export interface ProcurementResponse<T = any> {
   success: boolean
@@ -290,6 +292,104 @@ export class ProcurementService {
         error:
           error instanceof Error ? error.message : "Failed to fetch assignments",
       }
+    }
+  }
+
+  /**
+   * Synchronize RFQ status with purchase request status changes
+   * Maps PR status changes to RFQ status updates
+   */
+  async syncRFQStatusWithPurchaseRequest(
+    requestId: string,
+    newStatus: string,
+    organizationId: string,
+    performedBy: string
+  ): Promise<void> {
+    try {
+      const db = getDb()
+
+      // Find RFQ linked to this purchase request
+      const rfq = await db
+        .select()
+        .from(schema.rfqs)
+        .where(eq(schema.rfqs.purchaseRequestId, requestId))
+        .limit(1)
+
+      // If no RFQ exists, nothing to sync
+      if (!rfq.length) {
+        return
+      }
+
+      const currentRfq = rfq[0]
+      let newRfqStatus: string | null = null
+      let auditAction: string | null = null
+
+      // Map PR status to RFQ status
+      switch (newStatus) {
+        case "vendor_selected":
+          if (currentRfq.status !== "awarded") {
+            newRfqStatus = "awarded"
+            auditAction = "RFQ_AWARDED"
+          }
+          break
+        case "po_created":
+          if (currentRfq.status !== "awarded") {
+            newRfqStatus = "awarded"
+            auditAction = "RFQ_AWARDED"
+          }
+          break
+        case "completed":
+          if (currentRfq.status !== "closed") {
+            newRfqStatus = "closed"
+            auditAction = "RFQ_CLOSED"
+          }
+          break
+        case "cancelled":
+          if (currentRfq.status !== "cancelled") {
+            newRfqStatus = "cancelled"
+            auditAction = "RFQ_CANCELLED"
+          }
+          break
+      }
+
+      // Only update if status differs
+      if (newRfqStatus) {
+        // Update RFQ status
+        await db
+          .update(schema.rfqs)
+          .set({
+            status: newRfqStatus,
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.rfqs.id, currentRfq.id))
+
+        // Create audit log if action determined
+        if (auditAction) {
+          await this.auditRepo.create({
+            organizationId,
+            entityType: "rfq",
+            entityId: currentRfq.id,
+            action: auditAction,
+            performedBy,
+            metadata: {
+              requestId,
+              previousStatus: currentRfq.status,
+              newStatus: newRfqStatus,
+              reason: `Synced from purchase request status: ${newStatus}`,
+            },
+          })
+        }
+
+        console.log("[ProcurementService] RFQ status synced:", {
+          rfqId: currentRfq.id,
+          previousStatus: currentRfq.status,
+          newStatus: newRfqStatus,
+          prStatus: newStatus,
+        })
+      }
+    } catch (error) {
+      console.error("[ProcurementService] Error syncing RFQ status:", error)
+      // Don't throw - this is a secondary operation
     }
   }
 }

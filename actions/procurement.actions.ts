@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm"
 import { ProcurementService } from "@/services/procurement.service"
 import { UserRepository } from "@/repositories/user.repository"
 import { AuditLogRepository } from "@/repositories/audit-log.repository"
+import { syncRFQStatusOnPRStatusChange } from "@/actions/rfq-sync.actions"
 
 /**
  * Get procurement dashboard data
@@ -457,6 +458,17 @@ export async function selectVendorForRequest(
       aiScore
     )
 
+    // Sync RFQ status with PR status if vendor selection succeeds
+    if (result.success) {
+      // Note: PR status is updated elsewhere; we sync RFQ when PR status changes to "vendor_selected"
+      // For now, we'll sync immediately on successful vendor selection
+      await syncRFQStatusOnPRStatusChange(
+        requestId,
+        "vendor_selected",
+        organizationId
+      )
+    }
+
     return result
   } catch (error) {
     console.error("[selectVendorForRequest] Error:", error)
@@ -630,6 +642,9 @@ export async function generatePurchaseOrder(
         totalAmount,
       },
     })
+
+    // Sync RFQ status when PO is created
+    await syncRFQStatusOnPRStatusChange(requestId, "po_created", organizationId)
 
     console.log("[generatePurchaseOrder] PO generated:", { poNumber })
 
