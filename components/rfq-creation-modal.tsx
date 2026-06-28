@@ -59,6 +59,7 @@ export function RFQCreationModal({
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("")
   const [notes, setNotes] = useState("")
   const [termsAndConditions, setTermsAndConditions] = useState("")
+  const [specifications, setSpecifications] = useState("")
   const [rfqTitle, setRFQTitle] = useState(requestTitle || "")
   const [rfqDescription, setRFQDescription] = useState("")
 
@@ -130,7 +131,8 @@ export function RFQCreationModal({
         finalDescription,
         termsAndConditions,
         expectedDeliveryDate,
-        finalTitle // Always pass the RFQ title (user-provided or from request)
+        finalTitle, // Always pass the RFQ title (user-provided or from request)
+        specifications // Pass specifications
       )
 
       if (result.success) {
@@ -148,6 +150,7 @@ export function RFQCreationModal({
         setExpectedDeliveryDate("")
         setNotes("")
         setTermsAndConditions("")
+        setSpecifications("")
         setRFQTitle("")
         setRFQDescription("")
       } else {
@@ -264,6 +267,18 @@ export function RFQCreationModal({
               placeholder="Specify any terms and conditions..."
               value={termsAndConditions}
               onChange={(e) => setTermsAndConditions(e.target.value)}
+              className="min-h-20"
+            />
+          </div>
+
+          {/* Specifications */}
+          <div className="space-y-2">
+            <Label htmlFor="specifications">Specifications (Optional)</Label>
+            <Textarea
+              id="specifications"
+              placeholder="Technical specifications, requirements, or detailed product specifications..."
+              value={specifications}
+              onChange={(e) => setSpecifications(e.target.value)}
               className="min-h-20"
             />
           </div>

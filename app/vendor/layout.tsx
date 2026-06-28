@@ -7,6 +7,8 @@ export default function VendorLayout({
 }: {
   children: React.ReactNode
 }) {
+
+  
   return (
     <SidebarProvider>
       <VendorSidebar />

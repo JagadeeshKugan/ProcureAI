@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2, Calendar, FileText, ClipboardList, Info } from "lucide-react"
 import { toast } from "sonner"
 import { getVendorRFQDetail, submitQuotation } from "@/actions/vendor.actions"
 
@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { StatusBadge } from "@/components/status-badge"
 import {
   Field,
   FieldGroup,
@@ -20,6 +22,7 @@ import {
 export interface RFQDetail {
   id: string
   title: string
+  rfqNumber: string | null
   description: string | null
   specifications: string | null
   dueDate: Date | null
@@ -47,14 +50,13 @@ export default function RFQDetailPage() {
     warranty: "",
     notes: "",
   })
-  const params = useParams()  
+  const params = useParams()
   const rfqId = params.id as string
-console.log(params.id)
+
   useEffect(() => {
     const fetchRFQ = async () => {
       try {
         const result = await getVendorRFQDetail(rfqId)
-        console.log({result})
         if (result.success && result.data) {
           setRfq(result.data as RFQDetail)
         } else {
@@ -162,13 +164,110 @@ console.log(params.id)
       <div className="grid gap-6 lg:grid-cols-3">
         {/* RFQ Details */}
         <div className="space-y-4 lg:col-span-2">
+          {/* RFQ Information Card */}
           <Card className="p-6">
-            <h2 className="font-semibold">Details</h2>
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              {rfq.description}
+            <div className="flex items-center gap-2 mb-4">
+              <Info className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold">RFQ Information</h2>
+            </div>
+            <div className="grid gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">RFQ Number</p>
+                  <p className="mt-1 text-sm font-mono">{rfq.rfqNumber || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Status</p>
+                  <div className="mt-1">
+                    <StatusBadge status={rfq.status ?? "pending"} />
+                  </div>
+                </div>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-xs font-medium text-muted-foreground">Due Date</p>
+                  </div>
+                  <p className="mt-1 text-sm">
+                    {rfq.dueDate
+                      ? new Date(rfq.dueDate).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "Not specified"}
+                  </p>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-xs font-medium text-muted-foreground">Expected Delivery</p>
+                  </div>
+                  <p className="mt-1 text-sm">
+                    {rfq.expectedDeliveryDate
+                      ? new Date(rfq.expectedDeliveryDate).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "Not specified"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Description Card */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold">Description</h2>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+              {rfq.description || "No description provided"}
             </p>
           </Card>
 
+          {/* Technical Specifications Card */}
+          {rfq.specifications && (
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <ClipboardList className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold">Technical Specifications</h2>
+              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                {rfq.specifications}
+              </p>
+            </Card>
+          )}
+
+          {/* Additional Notes Card */}
+          {rfq.notes && (
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold">Additional Notes</h2>
+              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                {rfq.notes}
+              </p>
+            </Card>
+          )}
+
+          {/* Terms & Conditions Card */}
+          {rfq.termsAndConditions && (
+            <Card className="p-6 bg-muted/50">
+              <div className="flex items-center gap-2 mb-4">
+                <Info className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold">Terms & Conditions</h2>
+              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                {rfq.termsAndConditions}
+              </p>
+            </Card>
+          )}
         </div>
 
         {/* Quote Form */}

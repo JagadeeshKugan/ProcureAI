@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useEffect, useState } from "react"
 import { Mail, Phone, MapPin, Building2, Calendar, Award, Edit2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,18 +9,105 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { PageHeader } from "@/components/page-header"
+import { getUserProfile } from "@/actions/profile.actions"
+
+interface UserProfile {
+  id: string
+  name: string
+  email: string
+  role: string
+  department?: string
+  status?: string
+  createdAt?: Date
+}
 
 export default function ProfilePage() {
-  const userProfile = {
-    name: "Alex Carter",
-    role: "Head of Procurement",
-    email: "alex.carter@company.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    department: "Procurement",
-    joinDate: "January 15, 2022",
-    avatar: "AC",
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const result = await getUserProfile()
+        if (result.success && result.data) {
+          setUserProfile(result.data as UserProfile)
+        } else {
+          // Set default/error state
+          setUserProfile({
+            id: "",
+            name: "User",
+            email: "",
+            role: "requester",
+            department: "Unknown",
+            status: "unknown",
+          })
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [])
+
+  // Extract initials from name
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
   }
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-8">
+        <PageHeader
+          title="User Profile"
+          description="Manage your account settings and preferences"
+        />
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-4">
+              <div className="size-20 rounded-full bg-muted animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-8 bg-muted rounded animate-pulse" />
+                <div className="h-4 bg-muted rounded animate-pulse w-32" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!userProfile) {
+    return (
+      <div className="flex flex-col gap-8">
+        <PageHeader
+          title="User Profile"
+          description="Manage your account settings and preferences"
+        />
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-muted-foreground">Unable to load profile information.</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Format join date
+  const joinDate = userProfile.createdAt
+    ? new Date(userProfile.createdAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "Unknown"
 
   const procurementStats = [
     {
@@ -62,6 +150,19 @@ export default function ProfilePage() {
     { action: "Logged in", time: "1 day ago", icon: "🔐" },
   ]
 
+  // Map role values to display labels
+  const getRoleLabel = (role: string) => {
+    const roleMap: { [key: string]: string } = {
+      requester: "Requester",
+      procurement_manager: "Procurement Manager",
+      procurement_team: "Procurement Team",
+      finance_officer: "Finance Officer",
+      vendor: "Vendor",
+      admin: "Administrator",
+    }
+    return roleMap[role] || role
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
@@ -76,24 +177,16 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
               <Avatar className="size-20">
                 <AvatarFallback className="bg-primary text-lg text-primary-foreground">
-                  {userProfile.avatar}
+                  {getInitials(userProfile.name)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col gap-2">
                 <h1 className="text-2xl font-bold">{userProfile.name}</h1>
-                <Badge className="w-fit">{userProfile.role}</Badge>
+                <Badge className="w-fit">{getRoleLabel(userProfile.role)}</Badge>
                 <div className="flex flex-col gap-1 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Mail className="size-4" />
                     {userProfile.email}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="size-4" />
-                    {userProfile.phone}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="size-4" />
-                    {userProfile.location}
                   </div>
                 </div>
               </div>
@@ -114,23 +207,35 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
+              <p className="text-sm font-medium text-muted-foreground">Role</p>
+              <p className="mt-1 text-sm font-medium">{getRoleLabel(userProfile.role)}</p>
+            </div>
+            <Separator />
+            <div>
               <p className="text-sm font-medium text-muted-foreground">Department</p>
-              <p className="mt-1 text-sm font-medium">{userProfile.department}</p>
+              <p className="mt-1 text-sm font-medium">{userProfile.department || "Not specified"}</p>
             </div>
             <Separator />
             <div>
               <p className="text-sm font-medium text-muted-foreground">Member Since</p>
               <div className="mt-1 flex items-center gap-2 text-sm font-medium">
                 <Calendar className="size-4" />
-                {userProfile.joinDate}
+                {joinDate}
               </div>
             </div>
             <Separator />
             <div>
               <p className="text-sm font-medium text-muted-foreground">Account Status</p>
               <p className="mt-1">
-                <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                  Active
+                <Badge
+                  variant="outline"
+                  className={
+                    userProfile.status === "active"
+                      ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                      : "bg-yellow-50 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300"
+                  }
+                >
+                  {userProfile.status ? userProfile.status.charAt(0).toUpperCase() + userProfile.status.slice(1) : "Unknown"}
                 </Badge>
               </p>
             </div>

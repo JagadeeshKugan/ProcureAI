@@ -186,7 +186,7 @@ export class ProcurementRepository {
     ).length
     const rfqCount = allRequests.filter((r) => r.status === "in_rfq").length
     const completedCount = allRequests.filter(
-      (r) => r.status === "completed"
+      (r) => r.status === "rfq_created"
     ).length
 
     const assignments = await this.getAssignmentsByOrganization(organizationId)

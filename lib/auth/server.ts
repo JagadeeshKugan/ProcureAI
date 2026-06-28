@@ -91,7 +91,6 @@ export async function syncUserToDatabase() {
         name: result[0]?.name,
         role: result[0]?.role,
         organizationId: result[0]?.organizationId,
-        status: result[0]?.status,
       });
       return result[0] || null;
     } else {
@@ -136,5 +135,27 @@ export async function getCurrentUser() {
     console.error("[Auth] Failed to get current user:", error);
     return null;
   }
+}
+
+export async function getVendorCompany() {
+  const { userId } = await auth()
+
+  if (!userId) return null
+
+  const db = getDb()
+
+  const result = await db
+    .select({
+      companyName: schema.organizations.name,
+    })
+    .from(schema.users)
+    .leftJoin(
+      schema.organizations,
+      eq(schema.users.organizationId, schema.organizations.id)
+    )
+    .where(eq(schema.users.clerkId, userId))
+    .limit(1)
+
+  return result[0]?.companyName
 }
 

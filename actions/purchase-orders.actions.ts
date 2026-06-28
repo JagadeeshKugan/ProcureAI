@@ -10,13 +10,16 @@ import { UserRepository } from "@/repositories/user.repository"
 async function generatePONumber(organizationId: string): Promise<string> {
   const db = getDb()
   const year = new Date().getFullYear()
-  
+  const {userId} = await auth();
+  const userRepo = new UserRepository()
+  const appUser = await userRepo.findByClerkId(userId!)
+  const organizationUId = appUser.organizationId;
   const lastPO = await db
     .select({ poNumber: schema.purchaseOrders.poNumber })
     .from(schema.purchaseOrders)
     .where(
       and(
-        eq(schema.purchaseOrders.organizationId, organizationId),
+        eq(schema.purchaseOrders.organizationId, organizationUId!),
         eq(schema.purchaseOrders.status, "DRAFT")
       )
     )
@@ -135,7 +138,10 @@ export async function createPurchaseOrder(
 export async function getPurchaseOrdersByOrganization(organizationId: string) {
   try {
     const db = getDb()
-
+    const {userId} = await auth();
+       const userRepo = new UserRepository()
+    const appUser = await userRepo.findByClerkId(userId!)
+    const organizationUId = appUser.organizationId;
     const orders = await db
       .select({
         id: schema.purchaseOrders.id,
@@ -155,7 +161,7 @@ export async function getPurchaseOrdersByOrganization(organizationId: string) {
         eq(schema.purchaseOrders.requestId, schema.purchaseRequests.id)
       )
       .leftJoin(schema.users, eq(schema.purchaseOrders.vendorId, schema.users.id))
-      .where(eq(schema.purchaseOrders.organizationId, organizationId))
+      .where(eq(schema.purchaseOrders.organizationId, organizationUId!))
       .orderBy(schema.purchaseOrders.createdAt)
 
     return { success: true, data: orders }
@@ -165,17 +171,78 @@ export async function getPurchaseOrdersByOrganization(organizationId: string) {
   }
 }
 
+export async function getPurchaseOrdersByVendor() {
+  try {
+    const { userId } = await auth()
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const userRepo = new UserRepository()
+    const vendorUser = await userRepo.findByClerkId(userId)
+    
+    if (!vendorUser) {
+      return { success: false, error: "Vendor user not found" }
+    }
+
+    if (vendorUser.role !== "vendor") {
+      return { success: false, error: "Unauthorized: Only vendors can view their orders" }
+    }
+
+    const db = getDb()
+    const orders = await db
+      .select({
+        id: schema.purchaseOrders.id,
+        poNumber: schema.purchaseOrders.poNumber,
+        requestNumber: schema.purchaseRequests.requestNumber,
+        requestTitle: schema.purchaseRequests.title,
+        buyerName: schema.organizations.name,
+        totalAmount: schema.purchaseOrders.totalAmount,
+        currency: schema.purchaseOrders.currency,
+        status: schema.purchaseOrders.status,
+        expectedDelivery: schema.purchaseOrders.expectedDelivery,
+        createdAt: schema.purchaseOrders.createdAt,
+      })
+      .from(schema.purchaseOrders)
+      .leftJoin(
+        schema.purchaseRequests,
+        eq(schema.purchaseOrders.requestId, schema.purchaseRequests.id)
+      )
+      .leftJoin(
+        schema.organizations,
+        eq(schema.purchaseOrders.organizationId, schema.organizations.id)
+      )
+      .where(eq(schema.purchaseOrders.vendorId, vendorUser.id))
+      .orderBy(schema.purchaseOrders.createdAt)
+
+    return { success: true, data: orders }
+  } catch (error) {
+    console.error("[getPurchaseOrdersByVendor Error]", error)
+    return { success: false, error: "Failed to fetch purchase orders" }
+  }
+}
+
 export async function getPurchaseOrderDetails(poId: string, organizationId: string) {
   try {
-    const db = getDb()
+     const { userId } = await auth()
+    if (!userId) {
+      return { success: false, error: "Not authenticated" }
+    }
 
+    const db = getDb()
+    const userRepo = new UserRepository()
+    const appUser = await userRepo.findByClerkId(userId)
+    const organizationUId = appUser.organizationId;
+    if (!appUser) {
+      return { success: false, error: "User not found in database" }
+    }
     const po = await db
       .select()
       .from(schema.purchaseOrders)
       .where(
         and(
           eq(schema.purchaseOrders.id, poId),
-          eq(schema.purchaseOrders.organizationId, organizationId)
+          eq(schema.purchaseOrders.organizationId, organizationUId!)
         )
       )
       .limit(1)
@@ -210,9 +277,13 @@ export async function updatePOStatus(
     const db = getDb()
     const userRepo = new UserRepository()
     const appUser = await userRepo.findByClerkId(userId)
-
+    const organizationUId = appUser.organizationId;
     if (!appUser) {
       return { success: false, error: "User not found in database" }
+    }
+
+    if(!organizationUId){
+      return { success: false, error: "Organization not found in database" }
     }
 
     await db.transaction(async (tx) => {
@@ -222,13 +293,13 @@ export async function updatePOStatus(
         .where(
           and(
             eq(schema.purchaseOrders.id, poId),
-            eq(schema.purchaseOrders.organizationId, organizationId)
+            eq(schema.purchaseOrders.organizationId, organizationUId)
           )
         )
 
       // Create audit log
       await tx.insert(schema.auditLogs).values({
-        organizationId,
+        organizationId:organizationUId,
         action: "STATUS_CHANGED",
         entityType: "purchase_order",
         entityId: poId,

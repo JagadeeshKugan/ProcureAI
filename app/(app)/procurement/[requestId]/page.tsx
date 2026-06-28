@@ -99,7 +99,7 @@ export default function ProcurementDetailPage() {
       
       // Redirect to RFQ details page
       setTimeout(() => {
-        router.push(`/procurement/rfqs/${rfqId}`)
+        router.push(`/rfq`)
       }, 1000)
     } catch (error) {
       console.error("[handleRFQCreated] Error:", error)

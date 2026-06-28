@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState, useEffect } from "react"
+import ReactMarkdown from "react-markdown"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,8 +12,21 @@ import {
   InputGroupButton,
   InputGroupTextarea,
 } from "@/components/ui/input-group"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { PurchaseRequestMode } from "@/components/requestor/purchase-request-mode"
+import { createPurchaseRequestAction } from "@/actions/requestor.actions"
+import {
+  getRFQByNumberForRecommendation,
+  getVendorRecommendation,
+} from "@/actions/rfq-vendor-recommendation.actions"
 import { cn } from "@/lib/utils"
-import { ArrowUp, Sparkles, User } from "lucide-react"
+import { ArrowUp, Sparkles, User, Plus } from "lucide-react"
 
 interface Message {
   id: string
@@ -62,27 +76,116 @@ export default function CopilotPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
   }, [messages, isTyping])
 
-  function send(text: string) {
+  async function send(text: string) {
     const content = text.trim()
     if (!content) return
+
     const userMsg: Message = { id: crypto.randomUUID(), role: "user", content }
     setMessages((prev) => [...prev, userMsg])
     setInput("")
     setIsTyping(true)
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), role: "assistant", content: getReply(content) },
-      ])
+
+    try {
+      // Detect RFQ number pattern: RFQ-YYYY-NNNNN
+      const rfqMatch = content.match(/RFQ-\d{4}-\d+/i)
+      
+      if (rfqMatch) {
+        const rfqNumber = rfqMatch[0].toUpperCase()
+        
+        // Check if user is asking about vendor recommendation
+        if (
+          /best|recommend|vendor|compare|who|which|award/i.test(content)
+        ) {
+          // Fetch RFQ and quotations
+          const rfqResult = await getRFQByNumberForRecommendation(rfqNumber)
+          
+          if (!rfqResult.success || !rfqResult.data) {
+            const errorMsg: Message = {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: `I couldn't find RFQ ${rfqNumber}. Could you verify the RFQ number?`,
+            }
+            setMessages((prev) => [...prev, errorMsg])
+            setIsTyping(false)
+            return
+          }
+
+          const { rfq, quotations } = rfqResult.data
+
+          if (quotations.length === 0) {
+            const noQuotesMsg: Message = {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: `No vendor quotations have been submitted yet for ${rfqNumber}.`,
+            }
+            setMessages((prev) => [...prev, noQuotesMsg])
+            setIsTyping(false)
+            return
+          }
+
+          // Get AI recommendation
+          try {
+            const recommendation = await getVendorRecommendation(
+              rfqNumber,
+              rfq.title,
+              quotations.map((q) => ({
+                vendorName: q.vendorName,
+                price: q.price,
+                deliveryDays: q.deliveryDays,
+                warranty: q.warranty,
+                notes: q.notes,
+              }))
+            )
+
+            const assistantMsg: Message = {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: recommendation.markdown,
+            }
+            setMessages((prev) => [...prev, assistantMsg])
+          } catch (error) {
+            console.error("[copilot] Recommendation error:", error)
+            const errorMsg: Message = {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: "I encountered an error analyzing the vendors. Please try again.",
+            }
+            setMessages((prev) => [...prev, errorMsg])
+          }
+          setIsTyping(false)
+          return
+        }
+      }
+
+      // Fall back to canned responses
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { id: crypto.randomUUID(), role: "assistant", content: getReply(content) },
+        ])
+        setIsTyping(false)
+      }, 900)
+    } catch (error) {
+      console.error("[copilot] Error:", error)
+      const errorMsg: Message = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: "An error occurred. Please try again.",
+      }
+      setMessages((prev) => [...prev, errorMsg])
       setIsTyping(false)
-    }, 900)
+    }
   }
+
+
 
   const isEmpty = messages.length === 0
 
@@ -91,7 +194,15 @@ export default function CopilotPage() {
       <PageHeader
         title="Procurement Copilot"
         description="Ask anything about vendors, spend, RFQs, and savings opportunities."
-      />
+      >
+        <Button
+          onClick={() => setIsCreateDialogOpen(true)}
+          className="gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Create Request with AI
+        </Button>
+      </PageHeader>
 
       <Card className="flex flex-1 flex-col overflow-hidden">
         <CardContent className="flex flex-1 flex-col overflow-hidden p-0">
@@ -153,7 +264,48 @@ export default function CopilotPage() {
                           : "bg-primary text-primary-foreground",
                       )}
                     >
-                      {msg.content}
+                      {msg.role === "assistant" ? (
+                        <article className="prose prose-sm max-w-none dark:prose-invert">
+                          <ReactMarkdown
+                            components={{
+                              h2: ({ children }) => (
+                                <h2 className="text-lg font-bold text-primary mb-3">
+                                  {children}
+                                </h2>
+                              ),
+                              h3: ({ children }) => (
+                                <h3 className="text-base font-semibold text-foreground mb-2">
+                                  {children}
+                                </h3>
+                              ),
+                              strong: ({ children }) => (
+                                <strong className="font-semibold text-foreground">
+                                  {children}
+                                </strong>
+                              ),
+                              li: ({ children }) => (
+                                <li className="mb-1 ml-4 list-disc">
+                                  {children}
+                                </li>
+                              ),
+                              ul: ({ children }) => (
+                                <ul className="mb-2">
+                                  {children}
+                                </ul>
+                              ),
+                              p: ({ children }) => (
+                                <p className="mb-2">
+                                  {children}
+                                </p>
+                              ),
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </article>
+                      ) : (
+                        msg.content
+                      )}
                     </div>
                   </div>
                 ))}
@@ -209,6 +361,22 @@ export default function CopilotPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Create Purchase Request Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Purchase Request</DialogTitle>
+            <DialogDescription>
+              Use AI to generate a purchase request from natural language or fill out the form manually.
+            </DialogDescription>
+          </DialogHeader>
+          <PurchaseRequestMode
+            //onSubmit={handleCreateRequest}
+            isLoading={isSubmittingRequest}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

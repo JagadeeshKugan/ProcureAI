@@ -2,13 +2,30 @@
 
 import { useUser } from "@clerk/nextjs"
 import { Separator } from "@/components/ui/separator"
+import { useEffect, useState } from "react"
+import { getVendorCompany, syncUserToDatabase } from "@/lib/auth/server"
 
 export function VendorTopbar() {
   const { user, isLoaded } = useUser()
+  const [companyName, setCompanyName] = useState("Vendor Company")
+
+    useEffect(() => {
+      getVendorCompany().then((name) => {
+        if (name) setCompanyName(name)
+      })
+    }, [])
+    
+    useEffect(() => {
+    if (isLoaded && user) {
+      syncUserToDatabase().catch((error) => {
+        console.error("[Topbar] Failed to sync user:", error)
+      })
+    }
+  }, [isLoaded, user])
 
   if (!isLoaded) return null
 
-  const companyName = user?.organizationMemberships?.[0]?.organization?.name || "Vendor Company"
+ 
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-4 border-b bg-background px-4 md:px-6">

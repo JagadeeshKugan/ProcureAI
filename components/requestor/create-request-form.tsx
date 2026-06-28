@@ -24,16 +24,31 @@ interface CreateRequestFormProps {
     priority: string
   }) => Promise<void>
   isLoading?: boolean
+  initialValues?: {
+    title?: string | null
+    description?: string | null
+    priority?: string | null
+    quantity?: string | null
+    budget?: string | null
+    category?: string | null
+    department?: string | null
+  }
 }
 
-export function CreateRequestForm({ onSubmit, isLoading = false }: CreateRequestFormProps) {
-  const [open, setOpen] = useState(false)
+export function CreateRequestForm({
+  onSubmit,
+  isLoading = false,
+  initialValues = {},
+}: CreateRequestFormProps) {
+  const [open, setOpen] = useState(!!initialValues.title)
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    quantity: 1,
-    unitPrice: 0,
-    priority: "medium",
+    title: initialValues.title || "",
+    description: initialValues.description || "",
+    quantity: initialValues.quantity ? parseInt(initialValues.quantity) : 1,
+    unitPrice: initialValues.budget
+      ? Math.ceil(parseInt(initialValues.budget) / (initialValues.quantity ? parseInt(initialValues.quantity) : 1))
+      : 0,
+    priority: initialValues.priority || "medium",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {

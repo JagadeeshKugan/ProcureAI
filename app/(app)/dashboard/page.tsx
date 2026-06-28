@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { Suspense } from "react"
 import {
   Building2,
   Clock,
@@ -19,7 +20,9 @@ import {
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { kpis, formatCurrency } from "@/lib/data"
+import { formatCurrency } from "@/lib/data"
+import { getDashboardMetrics } from "@/actions/dashboard.actions"
+import { auth } from "@clerk/nextjs/server"
 
 const quickActions = [
   {
@@ -37,19 +40,66 @@ const quickActions = [
   {
     title: "Compare Quotes",
     desc: "Analyze supplier quotations",
-    href: "/compare",
+    href: "/purchase-orders",
     icon: GitCompareArrows,
   },
 ]
 
-export default function DashboardPage() {
+async function DashboardMetrics() {
+  const result = await getDashboardMetrics()
+  const metrics = result.data || {
+    totalVendors: 0,
+    totalVendorsDelta: 0,
+    pendingRequests: 0,
+    pendingRequestsDelta: 0,
+    activeRfqs: 0,
+    activeRfqsDelta: 0,
+    savings: 0,
+    savingsDelta: 0,
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <KpiCard
+        label="Total Vendors"
+        value={metrics.totalVendors.toString()}
+        delta={metrics.totalVendorsDelta}
+        icon={Building2}
+      />
+      <KpiCard
+        label="Pending Requests"
+        value={metrics.pendingRequests.toString()}
+        delta={metrics.pendingRequestsDelta}
+        icon={Clock}
+        invertDelta
+      />
+      <KpiCard
+        label="Active RFQs"
+        value={metrics.activeRfqs.toString()}
+        delta={metrics.activeRfqsDelta}
+        icon={FileSpreadsheet}
+      />
+      <KpiCard
+        label="Procurement Savings"
+        value={formatCurrency(metrics.savings, true)}
+        delta={metrics.savingsDelta}
+        deltaLabel="%"
+        icon={PiggyBank}
+      />
+    </div>
+  )
+}
+
+export default async function DashboardPage() {
+  const { orgId, orgRole } = await auth()
+
   return (
     <>
       <PageHeader
         title="Dashboard"
         description="Welcome back, Alex. Here is your procurement overview."
       >
-        <Button
+       { ['org:admin','org:requester'].includes(orgRole!) && <Button
           variant="outline"
           render={<Link href="/requests" />}
           nativeButton={false}
@@ -57,41 +107,20 @@ export default function DashboardPage() {
         >
           <Plus data-icon="inline-start" />
           New Request
-        </Button>
+        </Button>}
         <Button render={<Link href="/copilot" />} nativeButton={false} className="cursor-pointer">
           Ask Copilot
         </Button>
       </PageHeader>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          label="Total Vendors"
-          value={kpis.totalVendors.toString()}
-          delta={kpis.totalVendorsDelta}
-          icon={Building2}
-        />
-        <KpiCard
-          label="Pending Requests"
-          value={kpis.pendingRequests.toString()}
-          delta={kpis.pendingRequestsDelta}
-          icon={Clock}
-          invertDelta
-        />
-        <KpiCard
-          label="Active RFQs"
-          value={kpis.activeRfqs.toString()}
-          delta={kpis.activeRfqsDelta}
-          icon={FileSpreadsheet}
-        />
-        <KpiCard
-          label="Procurement Savings"
-          value={formatCurrency(kpis.savings, true)}
-          delta={kpis.savingsDelta}
-          deltaLabel="%"
-          icon={PiggyBank}
-        />
-      </div>
+      <Suspense fallback={<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
+        ))}
+      </div>}>
+        <DashboardMetrics />
+      </Suspense>
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
