@@ -10,12 +10,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from "sonner"
 
 interface AIRequestData {
-  title: string | null
-  description: string | null
+  title: string
+  description: string
   priority: "low" | "medium" | "high" | "critical" | null
-  department: string | null
-  budget: string | null
-  quantity: string | null
+  department: string
+  budget: string
+  quantity: string
   category: string | null
 }
 
