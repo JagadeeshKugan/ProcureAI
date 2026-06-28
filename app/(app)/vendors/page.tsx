@@ -123,7 +123,7 @@ export default function VendorsPage() {
                   <TableHead>Organization</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead className="w-24" />
+                  {/* <TableHead className="w-24" /> */}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -161,7 +161,7 @@ export default function VendorsPage() {
                         year: "2-digit",
                       })}
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -171,7 +171,7 @@ export default function VendorsPage() {
                       >
                         View
                       </Button>
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>
