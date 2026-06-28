@@ -57,7 +57,12 @@ const navItems = [
 export function VendorSidebar() {
   const pathname = usePathname()
   const { signOut } = useClerk()
-
+  const handleLogout = async () => {
+  await signOut({
+    redirectUrl: "/sign-in",
+  });
+  window.location.reload();
+}
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -100,7 +105,7 @@ export function VendorSidebar() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() =>{ signOut(); window.location.reload();}}
+              onClick={handleLogout}
               className="w-full justify-start"
             >
               <LogOut className="size-4" />
