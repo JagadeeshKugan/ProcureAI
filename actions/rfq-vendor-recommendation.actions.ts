@@ -84,7 +84,7 @@ export async function getVendorRecommendation(
   }
 
   const client = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY)
-  const model = client.getGenerativeModel({ model: "gemini-1.5-flash" })
+  const model = client.getGenerativeModel({ model: "gemini-2.5-flash" })
 
   const quotationsText = quotations
     .map(

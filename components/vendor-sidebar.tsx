@@ -100,7 +100,7 @@ export function VendorSidebar() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => signOut()}
+              onClick={() =>{ signOut(); window.location.reload();}}
               className="w-full justify-start"
             >
               <LogOut className="size-4" />
