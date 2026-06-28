@@ -25,7 +25,6 @@ export class DashboardService {
         .from(schema.users)
         .where(
           and(
-            eq(schema.users.organizationId, organizationId),
             eq(schema.users.role, "vendor"),
             eq(schema.users.status, "active")
           )
@@ -110,7 +109,7 @@ export class DashboardService {
       // When an RFQ is awarded, its selected quotation price becomes the actual spend
       const actualResult = await this.db
         .select({
-          total: sql<number>`COALESCE(SUM(CAST(q.price AS NUMERIC)), 0)`,
+          total: sql<number>`COALESCE(SUM(CAST(${schema.quotations.price} AS NUMERIC)), 0)`,
         })
         .from(schema.rfqs)
         .innerJoin(
