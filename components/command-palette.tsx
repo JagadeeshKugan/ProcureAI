@@ -31,7 +31,6 @@ const pages = [
   { title: "Purchase Requests", href: "/requests", icon: FileText },
   { title: "Vendors", href: "/vendors", icon: Building2 },
   { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
-  { title: "Quote Comparison", href: "/compare", icon: GitCompareArrows },
   { title: "Purchase Orders", href: "/orders", icon: ScrollText },
   { title: "Procurement Copilot", href: "/copilot", icon: Sparkles },
 ]
@@ -44,7 +43,7 @@ export function CommandPalette({
   onOpenChange: (open: boolean) => void
 }) {
   const router = useRouter()
-  const { setTheme, resolvedTheme } = useTheme()
+  // const { setTheme, resolvedTheme } = useTheme()
 
   const go = React.useCallback(
     (href: string) => {
@@ -81,28 +80,14 @@ export function CommandPalette({
             <FileSpreadsheet />
             Generate RFQ
           </CommandItem>
-          <CommandItem value="compare quotes" onSelect={() => go("/compare")}>
-            <GitCompareArrows />
-            Compare Quotes
-          </CommandItem>
+       
           <CommandItem value="ask copilot" onSelect={() => go("/copilot")}>
             <Sparkles />
             Ask Procurement Copilot
           </CommandItem>
         </CommandGroup>
         <CommandSeparator />
-        <CommandGroup heading="Preferences">
-          <CommandItem
-            value="toggle theme"
-            onSelect={() => {
-              setTheme(resolvedTheme === "dark" ? "light" : "dark")
-              onOpenChange(false)
-            }}
-          >
-            {resolvedTheme === "dark" ? <Sun /> : <Moon />}
-            Toggle theme
-          </CommandItem>
-        </CommandGroup>
+        
       </CommandList>
     </CommandDialog>
   )
