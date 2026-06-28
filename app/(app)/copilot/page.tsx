@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState, useEffect } from "react"
+import ReactMarkdown from "react-markdown"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -263,7 +264,48 @@ export default function CopilotPage() {
                           : "bg-primary text-primary-foreground",
                       )}
                     >
-                      {msg.content}
+                      {msg.role === "assistant" ? (
+                        <article className="prose prose-sm max-w-none dark:prose-invert">
+                          <ReactMarkdown
+                            components={{
+                              h2: ({ children }) => (
+                                <h2 className="text-lg font-bold text-primary mb-3">
+                                  {children}
+                                </h2>
+                              ),
+                              h3: ({ children }) => (
+                                <h3 className="text-base font-semibold text-foreground mb-2">
+                                  {children}
+                                </h3>
+                              ),
+                              strong: ({ children }) => (
+                                <strong className="font-semibold text-foreground">
+                                  {children}
+                                </strong>
+                              ),
+                              li: ({ children }) => (
+                                <li className="mb-1 ml-4 list-disc">
+                                  {children}
+                                </li>
+                              ),
+                              ul: ({ children }) => (
+                                <ul className="mb-2">
+                                  {children}
+                                </ul>
+                              ),
+                              p: ({ children }) => (
+                                <p className="mb-2">
+                                  {children}
+                                </p>
+                              ),
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </article>
+                      ) : (
+                        msg.content
+                      )}
                     </div>
                   </div>
                 ))}
