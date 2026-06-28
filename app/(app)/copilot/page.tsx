@@ -11,8 +11,17 @@ import {
   InputGroupButton,
   InputGroupTextarea,
 } from "@/components/ui/input-group"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { PurchaseRequestMode } from "@/components/requestor/purchase-request-mode"
+import { createPurchaseRequestAction } from "@/actions/requestor.actions"
 import { cn } from "@/lib/utils"
-import { ArrowUp, Sparkles, User } from "lucide-react"
+import { ArrowUp, Sparkles, User, Plus } from "lucide-react"
 
 interface Message {
   id: string
@@ -62,6 +71,8 @@ export default function CopilotPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -84,6 +95,22 @@ export default function CopilotPage() {
     }, 900)
   }
 
+  async function handleCreateRequest(data: {
+    title: string
+    description: string
+    quantity: number
+    unitPrice: number
+    priority: string
+  }) {
+    setIsSubmittingRequest(true)
+    try {
+      await createPurchaseRequestAction(data)
+      setIsCreateDialogOpen(false)
+    } finally {
+      setIsSubmittingRequest(false)
+    }
+  }
+
   const isEmpty = messages.length === 0
 
   return (
@@ -91,7 +118,15 @@ export default function CopilotPage() {
       <PageHeader
         title="Procurement Copilot"
         description="Ask anything about vendors, spend, RFQs, and savings opportunities."
-      />
+      >
+        <Button
+          onClick={() => setIsCreateDialogOpen(true)}
+          className="gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Create with AI
+        </Button>
+      </PageHeader>
 
       <Card className="flex flex-1 flex-col overflow-hidden">
         <CardContent className="flex flex-1 flex-col overflow-hidden p-0">
@@ -209,6 +244,22 @@ export default function CopilotPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Create Purchase Request Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Purchase Request</DialogTitle>
+            <DialogDescription>
+              Use AI to generate a purchase request from natural language or fill out the form manually.
+            </DialogDescription>
+          </DialogHeader>
+          <PurchaseRequestMode
+            onSubmit={handleCreateRequest}
+            isLoading={isSubmittingRequest}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
