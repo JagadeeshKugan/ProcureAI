@@ -24,7 +24,7 @@ interface AIRequestData {
 }
 
 interface PurchaseRequestModeProps {
-  onSubmit: (data: {
+  onSubmit?: (data: {
     title: string
     description: string
     quantity: number
@@ -102,7 +102,9 @@ export function PurchaseRequestMode({ onSubmit, isLoading = false }: PurchaseReq
     setMode("manual")
   }
 
-
+  if(IsSubmitting){
+    return <div>Submitting data ...</div>
+  }
   return (
     <div className="space-y-4">
       <Card className="p-4">

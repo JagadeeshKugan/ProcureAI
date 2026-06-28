@@ -95,21 +95,7 @@ export default function CopilotPage() {
     }, 900)
   }
 
-  async function handleCreateRequest(data: {
-    title: string
-    description: string
-    quantity: number
-    unitPrice: number
-    priority: string
-  }) {
-    setIsSubmittingRequest(true)
-    try {
-      await createPurchaseRequestAction(data)
-      setIsCreateDialogOpen(false)
-    } finally {
-      setIsSubmittingRequest(false)
-    }
-  }
+
 
   const isEmpty = messages.length === 0
 
@@ -255,7 +241,7 @@ export default function CopilotPage() {
             </DialogDescription>
           </DialogHeader>
           <PurchaseRequestMode
-            onSubmit={handleCreateRequest}
+            //onSubmit={handleCreateRequest}
             isLoading={isSubmittingRequest}
           />
         </DialogContent>
