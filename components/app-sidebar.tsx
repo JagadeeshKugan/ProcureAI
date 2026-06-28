@@ -63,7 +63,7 @@ const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: an
     { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
     { title: "All Requests", href: "/requests", icon: FileText },
     { title: "Procurement", href: "/procurement", icon: Package },
-    { title: "Finance", href: "/finance", icon: DollarSign },
+    // { title: "Finance", href: "/finance", icon: DollarSign },
     { title: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart },
     { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
     { title: "Vendors", href: "/vendors", icon: Building2 },
@@ -71,12 +71,11 @@ const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: an
   ],
   'org:buyer': [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "My Requests", href: "/department", icon: PlusCircle },
-    { title: "Request History", href: "/requests", icon: FileText },
+    { title: "My Requests", href: "/requests", icon: FileText },
   ],
   'org:requester': [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "My Request", href: "/requests", icon: FileText },
+    { title: "My Requests", href: "/requests", icon: FileText },
   ],
   'org:procurement_manager': [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -86,11 +85,7 @@ const roleBasedNav: Record<string, Array<{ title: string; href: string; icon: an
     { title: "RFQ Management", href: "/rfq", icon: FileSpreadsheet },
     { title: "Vendors", href: "/vendors", icon: Building2 },
   ],
-  'org:vendor': [
-    { title: "Dashboard", href: "/vendor/dashboard", icon: LayoutDashboard },
-    { title: "Quotations", href: "/vendor/quotations", icon: FileSpreadsheet },
-    { title: "My Orders", href: "/vendor/orders", icon: ShoppingCart },
-  ],
+  
 }
 
 const aiNav = [{ title: "Procurement Copilot", href: "/copilot", icon: Sparkles }]

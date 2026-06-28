@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/data"
 import { getDashboardMetrics } from "@/actions/dashboard.actions"
+import { useAuth } from "@clerk/nextjs"
 
 const quickActions = [
   {
@@ -90,13 +91,15 @@ async function DashboardMetrics() {
 }
 
 export default function DashboardPage() {
+  const { orgId, orgRole } = useAuth()
+
   return (
     <>
       <PageHeader
         title="Dashboard"
         description="Welcome back, Alex. Here is your procurement overview."
       >
-        <Button
+       { ['org:admin','org:requester'].includes(orgRole!) && <Button
           variant="outline"
           render={<Link href="/requests" />}
           nativeButton={false}
@@ -104,7 +107,7 @@ export default function DashboardPage() {
         >
           <Plus data-icon="inline-start" />
           New Request
-        </Button>
+        </Button>}
         <Button render={<Link href="/copilot" />} nativeButton={false} className="cursor-pointer">
           Ask Copilot
         </Button>
