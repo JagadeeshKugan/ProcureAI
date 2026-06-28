@@ -43,7 +43,7 @@ export function CommandPalette({
   onOpenChange: (open: boolean) => void
 }) {
   const router = useRouter()
-  // const { setTheme, resolvedTheme } = useTheme()
+  //const { setTheme, resolvedTheme } = useTheme()
 
   const go = React.useCallback(
     (href: string) => {
@@ -52,10 +52,7 @@ export function CommandPalette({
     },
     [onOpenChange, router],
   )
-   console.log("opened")
-   if(open){
-    return <div>USer search</div>
-   }
+
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput placeholder="Search pages, actions, vendors..." />
