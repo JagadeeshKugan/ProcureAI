@@ -24,7 +24,9 @@ import {
   TrendingDown,
   X,
   Loader2,
+  Zap,
 } from "lucide-react"
+import { VendorComparisonDialog } from "@/components/vendor-comparison-dialog"
 
 function formatCurrency(value: string | number) {
   const num = typeof value === "string" ? parseFloat(value) : value
@@ -78,6 +80,9 @@ export default function QuoteComparisonPage({
   const [loading, setLoading] = useState(true)
   const [awardingVendorId, setAwardingVendorId] = useState<string | null>(null)
   const [isAwarding, setIsAwarding] = useState(false)
+  const [comparisonOpen, setComparisonOpen] = useState(false)
+  const [comparisonLoading, setComparisonLoading] = useState(false)
+  const [comparisonResult, setComparisonResult] = useState<any>(null)
 
   const isAuthorized = orgRole && ["org:admin", "org:procurement_manager"].includes(orgRole)
   const canAward = isAuthorized && rfq && rfq.status !== "awarded" && rfq.status !== "closed"
@@ -139,6 +144,46 @@ export default function QuoteComparisonPage({
     }
   }
 
+  const handleCompareVendors = async () => {
+    if (!rfq) return
+
+    setComparisonLoading(true)
+    setComparisonOpen(true)
+
+    try {
+      const quotationData = quotations.map((q) => ({
+        vendorName: q.vendorName || "Unknown",
+        price: parseFloat(q.price),
+        deliveryDays: q.deliveryDays,
+        warranty: q.warranty,
+        notes: q.notes,
+      }))
+
+      const response = await fetch("/api/ai/vendor-comparison", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rfqId: id,
+          title: rfq.title,
+          quotations: quotationData,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI comparison")
+      }
+
+      const result = await response.json()
+      setComparisonResult(result)
+    } catch (error) {
+      console.error("[handleCompareVendors] Error:", error)
+      toast.error("Failed to analyze vendors")
+      setComparisonOpen(false)
+    } finally {
+      setComparisonLoading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -172,7 +217,20 @@ export default function QuoteComparisonPage({
         Back to RFQs
       </Button>
 
-      <PageHeader title={rfq.title} description={`${rfq.rfqNumber} · ${quotations.length} quotes received`} />
+      <div className="flex items-center justify-between">
+        <PageHeader title={rfq.title} description={`${rfq.rfqNumber} · ${quotations.length} quotes received`} />
+        {quotations.length > 0 && (
+          <Button
+            onClick={handleCompareVendors}
+            disabled={comparisonLoading}
+            variant="outline"
+            className="gap-2"
+          >
+            <Sparkles className="h-4 w-4" />
+            {comparisonLoading ? "Analyzing..." : "Compare with AI"}
+          </Button>
+        )}
+      </div>
 
       <Card className="overflow-hidden border-primary/30">
         <div className="bg-primary/5 px-6 py-5">
@@ -361,6 +419,14 @@ export default function QuoteComparisonPage({
           )
         })}
       </div>
+
+      <VendorComparisonDialog
+        open={comparisonOpen}
+        onOpenChange={setComparisonOpen}
+        title={rfq.title}
+        result={comparisonResult}
+        isLoading={comparisonLoading}
+      />
     </div>
   )
 }
