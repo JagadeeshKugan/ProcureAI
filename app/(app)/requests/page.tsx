@@ -103,13 +103,18 @@ export default function RequestsPage() {
     const converted: (PurchaseRequest & { approvalRoute?: string[] })[] = dbRequests.map((r) => {
       let approvalRoute: string[] | undefined = undefined
       if (r.approvalRoute) {
-        console.log("aproval",r.approvalRoute)
-        try {
-          approvalRoute = JSON.parse(r.approvalRoute) as string[]
-        } catch (e) {
-          console.error("[RequestsPage] Failed to parse approvalRoute:", e)
-          approvalRoute = undefined
-        }
+        if (Array.isArray(r.approvalRoute)) {
+    approvalRoute = r.approvalRoute
+  } else {
+    try {
+      approvalRoute = JSON.parse(r.approvalRoute)
+    } catch (e) {
+      console.error(
+        "[RequestsPage] Failed to parse approvalRoute:",
+        e
+      )
+    }
+  }
       }
       
       return {
