@@ -27,6 +27,7 @@ import {
 } from "@/actions/rfq-vendor-recommendation.actions"
 import { cn } from "@/lib/utils"
 import { ArrowUp, Sparkles, User, Plus } from "lucide-react"
+import { useAuth } from "@clerk/nextjs"
 
 interface Message {
   id: string
@@ -79,6 +80,7 @@ export default function CopilotPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const { orgId, orgRole } = useAuth();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
@@ -195,13 +197,13 @@ export default function CopilotPage() {
         title="Procurement Copilot"
         description="Ask anything about vendors, spend, RFQs, and savings opportunities."
       >
-        <Button
+        { ['org:admin','org:requester'].includes(orgRole!) && <Button
           onClick={() => setIsCreateDialogOpen(true)}
           className="gap-2"
         >
           <Plus className="h-4 w-4" />
           Create Request with AI
-        </Button>
+        </Button>}
       </PageHeader>
 
       <Card className="flex flex-1 flex-col overflow-hidden">
