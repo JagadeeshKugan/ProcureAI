@@ -103,6 +103,7 @@ export default function RequestsPage() {
     const converted: (PurchaseRequest & { approvalRoute?: string[] })[] = dbRequests.map((r) => {
       let approvalRoute: string[] | undefined = undefined
       if (r.approvalRoute) {
+        console.log("aproval",r.approvalRoute)
         try {
           approvalRoute = JSON.parse(r.approvalRoute) as string[]
         } catch (e) {
