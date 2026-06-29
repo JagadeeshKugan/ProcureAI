@@ -273,7 +273,7 @@ export default function PODetailPage() {
 
       <div className="flex gap-2">
         <Link href="/purchase-orders" className="flex-1">
-          <Button variant="outline" className="w-full">
+          <Button variant="outline" className="w-full max-w-[150px]">
             Back to Orders
           </Button>
         </Link>
