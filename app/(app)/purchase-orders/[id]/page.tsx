@@ -6,6 +6,7 @@ import { redirect, useParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, FileText, Download } from "lucide-react"
 import { getPurchaseOrderDetails, updatePOStatus } from "@/actions/purchase-orders.actions"
+import { generatePurchaseOrderPdf } from "@/lib/pdf/purchase-order-pdf"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -59,6 +60,7 @@ export default function PODetailPage() {
   const [loading, setLoading] = useState(true)
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [newStatus, setNewStatus] = useState<string|null>("")
+  const [isExporting, setIsExporting] = useState(false)
 
   // Check authorization
   if (orgRole !== "org:procurement_manager" && orgRole !== "org:admin") {
@@ -104,6 +106,22 @@ export default function PODetailPage() {
     }
   }
 
+  const handleExportPDF = async () => {
+    if (!poDetails) return
+
+    setIsExporting(true)
+    try {
+      // Generate PDF using the utility function with existing data
+      generatePurchaseOrderPdf(poDetails)
+      toast.success("Purchase Order exported successfully")
+    } catch (error) {
+      console.error("Error exporting PDF:", error)
+      toast.error("Failed to export Purchase Order")
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const formatDate = (date: Date | string | undefined) => {
     if (!date) return "-"
     const d = new Date(date)
@@ -122,16 +140,26 @@ export default function PODetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/purchase-orders">
-          <Button variant="outline" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <PageHeader
-          title={poDetails.po.poNumber}
-          description={`Status: ${poDetails.po.status}`}
-        />
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/purchase-orders">
+            <Button variant="outline" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <PageHeader
+            title={poDetails.po.poNumber}
+            description={`Status: ${poDetails.po.status}`}
+          />
+        </div>
+        <Button
+          onClick={handleExportPDF}
+          disabled={isExporting}
+          className="gap-2"
+        >
+          <Download className="h-4 w-4" />
+          {isExporting ? "Exporting PDF..." : "Export PDF"}
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
