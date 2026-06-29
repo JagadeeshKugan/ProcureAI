@@ -40,6 +40,7 @@ import {
   formatCurrency,
   type PurchaseRequest,
 } from "@/lib/data"
+import { useAuth } from "@clerk/nextjs"
 
 interface DBRequest {
   id: string
@@ -80,6 +81,7 @@ export default function RequestsPage() {
   const [selected, setSelected] = React.useState<(PurchaseRequest & { approvalRoute?: string[] }) | null>(null)
   const [dbRequests, setDbRequests] = React.useState<DBRequest[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+    const { orgId, orgRole } = useAuth()
 
   // Load database requests
   React.useEffect(() => {
@@ -155,10 +157,10 @@ export default function RequestsPage() {
         title="Purchase Requests"
         description="Track, approve, and route procurement requests across departments."
       >
-        <Button render={<Link href="/requests/create" />} nativeButton={false} className="cursor-pointer">
+        { ['org:admin','org:requester'].includes(orgRole!) && <Button render={<Link href="/requests/create" />} nativeButton={false} className="cursor-pointer">
           <Plus data-icon="inline-start" />
           Create New Request
-        </Button>
+        </Button>}
       </PageHeader>
 
       <Card className="p-0">
